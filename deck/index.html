@@ -1,0 +1,2100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>From Firmware Dumps to Driver Development — BSides Maine 2026</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+/* =========================================================================
+   BSides Maine 2026 — From Firmware Dumps to Driver Development
+   Matt Davis · @MatteiusPi · OpenSensor Engineering
+   ========================================================================= */
+
+:root {
+  --bg:        #07090C;
+  --bg-grid:  rgba(255,255,255,0.025);
+  --panel:     #10141A;
+  --panel-2:   #161B22;
+  --panel-3:   #1C2230;
+  --border:    #242A33;
+  --border-2:  #2E3540;
+  --text:      #E6EDF3;
+  --text-dim:  #A6AFBB;
+  --muted:     #7D8691;
+  --muted-2:   #5A626D;
+
+  --green:     #00E38C;
+  --green-dim: #0A6B44;
+  --blue:      #6AB2FF;
+  --blue-dim:  #1E4A7A;
+  --amber:     #F5A524;
+  --coral:     #FF6A5C;
+  --red:       #F85149;
+  --magenta:   #D67AFF;
+
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-sans: "Space Grotesk", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+
+deck-stage { background: var(--bg) !important; }
+
+/* ── No-JS / pre-hydration fallback ──────────────────────────────────
+   If the custom element hasn't registered yet (or failed to load),
+   deck-stage is an unknown element with no intrinsic size and slides
+   inside it are unstyled. These rules make it visible so we don't get
+   a black screen. Once the custom element registers, its shadow-DOM
+   slotted rules (::slotted with absolute positioning) take over. */
+deck-stage:not(:defined) {
+  display: block;
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+deck-stage:not(:defined) > section {
+  display: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+deck-stage:not(:defined) > section:first-of-type {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Every slide: base frame ───────────────────────────────────────── */
+section.slide {
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(0,227,140,0.05), transparent 45%),
+    radial-gradient(ellipse at 90% 100%, rgba(106,178,255,0.04), transparent 50%),
+    var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  position: absolute;
+  inset: 0;
+  font-family: var(--font-sans);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Subtle terminal grid */
+section.slide::before {
+  content: "";
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(var(--bg-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: 0;
+  mask-image: radial-gradient(ellipse at center, black 40%, transparent 90%);
+}
+
+.slide > * { position: relative; z-index: 1; }
+
+/* ── Chrome: top bar + bottom bar ───────────────────────────────────── */
+.chrome-top, .chrome-bot {
+  position: absolute;
+  left: 64px; right: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 20px;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+  z-index: 2;
+}
+.chrome-top *, .chrome-bot * { font-size: inherit; }
+.chrome-top { top: 40px; }
+.chrome-bot { bottom: 40px; }
+
+.chrome-top .prompt { color: var(--green); }
+.chrome-top .path   { color: var(--text-dim); }
+.chrome-top .cursor {
+  display: inline-block; width: 10px; height: 18px;
+  background: var(--green);
+  margin-left: 2px;
+  vertical-align: middle;
+  animation: blink 1.05s steps(2) infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+.chrome-bot .meta  { color: var(--muted-2); }
+.chrome-bot .page  { color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.chrome-bot .page .sep { color: var(--muted-2); margin: 0 6px; }
+
+/* ── Slide body layout ─────────────────────────────────────────────── */
+.body {
+  position: absolute;
+  top: 120px;
+  bottom: 120px;
+  left: 96px;
+  right: 96px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Type ──────────────────────────────────────────────────────────── */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 18px;
+  display: inline-flex; align-items: center; gap: 12px;
+}
+.eyebrow::before {
+  content: "";
+  width: 10px; height: 10px;
+  background: var(--green);
+  box-shadow: 0 0 16px var(--green);
+  display: inline-block;
+}
+
+h1, h2, h3 { margin: 0; font-weight: 500; }
+
+.h-display {
+  font-family: var(--font-sans);
+  font-size: 92px;
+  line-height: 1.02;
+  letter-spacing: -0.028em;
+  font-weight: 500;
+  color: var(--text);
+}
+.h-title {
+  font-family: var(--font-sans);
+  font-size: 64px;
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  font-weight: 500;
+  color: var(--text);
+}
+.h-sub {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  color: var(--text-dim);
+  font-weight: 400;
+  margin-top: 14px;
+  letter-spacing: 0;
+}
+
+.lead {
+  font-family: var(--font-sans);
+  font-size: 30px;
+  line-height: 1.45;
+  color: var(--text-dim);
+  font-weight: 400;
+  max-width: 1400px;
+}
+
+p, li { font-size: 24px; line-height: 1.5; color: var(--text-dim); }
+
+/* Inline code */
+code, .mono { font-family: var(--font-mono); }
+.mono-tight { font-family: var(--font-mono); letter-spacing: -0.01em; }
+
+code.inline {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--green);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+/* ── Terminal window ───────────────────────────────────────────────── */
+.term {
+  background: #0A0D12;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.04) inset,
+    0 24px 80px rgba(0,0,0,0.55);
+  overflow: hidden;
+  font-family: var(--font-mono);
+}
+.term-head {
+  display: flex; align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  background: linear-gradient(180deg, #141821, #0F141B);
+  border-bottom: 1px solid var(--border);
+}
+.term-head .dot { width: 12px; height: 12px; border-radius: 50%; }
+.term-head .dot.r { background: #ff5f57; }
+.term-head .dot.y { background: #febc2e; }
+.term-head .dot.g { background: #28c840; }
+.term-head .title {
+  flex: 1; text-align: center;
+  color: var(--muted); font-size: 14px; letter-spacing: 0.04em;
+}
+.term-body {
+  padding: 26px 28px;
+  font-size: 22px;
+  line-height: 1.6;
+  color: #CED5DD;
+  white-space: pre-wrap;
+}
+.term-body .prompt { color: var(--green); }
+.term-body .cmd    { color: var(--text); }
+.term-body .out    { color: #8B949E; }
+.term-body .cmt    { color: #6E7681; font-style: italic; }
+.term-body .str    { color: var(--amber); }
+.term-body .kw     { color: var(--blue); }
+.term-body .hi     { color: var(--green); }
+.term-body .err    { color: var(--red); }
+
+/* ── Cards ─────────────────────────────────────────────────────────── */
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px 36px;
+  position: relative;
+}
+.card.accent-green { border-color: rgba(0,227,140,0.35); box-shadow: inset 0 0 0 1px rgba(0,227,140,0.08); }
+.card.accent-blue  { border-color: rgba(106,178,255,0.35); box-shadow: inset 0 0 0 1px rgba(106,178,255,0.08); }
+.card.accent-amber { border-color: rgba(245,165,36,0.35);  box-shadow: inset 0 0 0 1px rgba(245,165,36,0.08); }
+.card.accent-coral { border-color: rgba(255,106,92,0.35);  box-shadow: inset 0 0 0 1px rgba(255,106,92,0.08); }
+
+.card .card-label {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.card.accent-green .card-label { color: var(--green); }
+.card.accent-blue  .card-label { color: var(--blue); }
+.card.accent-amber .card-label { color: var(--amber); }
+.card.accent-coral .card-label { color: var(--coral); }
+
+.card h3.card-title {
+  font-family: var(--font-sans);
+  font-size: 36px;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 20px;
+}
+
+.card ul { padding-left: 0; list-style: none; margin: 0; }
+.card li {
+  font-family: var(--font-sans);
+  font-size: 22px;
+  line-height: 1.5;
+  color: var(--text-dim);
+  padding: 8px 0 8px 24px;
+  position: relative;
+}
+.card li::before {
+  content: "›";
+  position: absolute; left: 0; top: 7px;
+  color: var(--muted-2);
+  font-family: var(--font-mono);
+  font-size: 22px;
+}
+.card.accent-green li::before { color: var(--green); }
+.card.accent-blue  li::before { color: var(--blue); }
+.card.accent-amber li::before { color: var(--amber); }
+.card.accent-coral li::before { color: var(--coral); }
+
+/* ── Stat blocks ───────────────────────────────────────────────────── */
+.stats { display: grid; gap: 16px; }
+.stat {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 14px 0;
+  border-bottom: 1px dashed var(--border);
+}
+.stat:last-child { border-bottom: none; }
+.stat .label {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.stat .value {
+  font-family: var(--font-mono);
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--text);
+  letter-spacing: 0;
+}
+.stat .value.hi { color: var(--green); }
+.stat .value.am { color: var(--amber); }
+
+/* ── Table (built from flex/grid, not <table>) ─────────────────────── */
+.tbl {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  background: var(--panel);
+}
+.tbl .row {
+  display: grid;
+  align-items: stretch;
+  border-bottom: 1px solid var(--border);
+}
+.tbl .row:last-child { border-bottom: none; }
+.tbl .row > div {
+  padding: 18px 24px;
+  font-size: 20px;
+  color: var(--text-dim);
+  border-right: 1px solid var(--border);
+}
+.tbl .row > div:last-child { border-right: none; }
+.tbl .row.head > div {
+  background: var(--green);
+  color: #062513;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.tbl .row.alt { background: var(--panel-2); }
+.tbl .ok   { color: var(--green); }
+.tbl .warn { color: var(--amber); }
+.tbl .bad  { color: var(--red); }
+.tbl .dim  { color: var(--muted); }
+
+/* ── Pills / badges ────────────────────────────────────────────────── */
+.pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 12px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+}
+.pill.green { border-color: rgba(0,227,140,0.4); color: var(--green); }
+.pill.amber { border-color: rgba(245,165,36,0.4); color: var(--amber); }
+.pill.red   { border-color: rgba(255,106,92,0.4); color: var(--coral); }
+.pill.blue  { border-color: rgba(106,178,255,0.4); color: var(--blue); }
+.pill .dot { width:6px; height:6px; border-radius:50%; background: currentColor; }
+
+/* ── Link strip ────────────────────────────────────────────────────── */
+.links {
+  display: flex; gap: 28px; flex-wrap: wrap;
+  font-family: var(--font-mono); font-size: 20px;
+}
+.links a {
+  color: var(--text-dim); text-decoration: none;
+  border-bottom: 1px dashed var(--border-2);
+  padding-bottom: 2px;
+}
+.links a:hover { color: var(--green); border-color: var(--green); }
+
+/* ── Placeholder image box ────────────────────────────────────────── */
+.ph-img {
+  background:
+    repeating-linear-gradient(135deg,
+      var(--panel) 0 12px,
+      var(--panel-2) 12px 24px);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  display: flex; align-items: center; justify-content: center;
+  text-align: center;
+  padding: 20px;
+  min-height: 200px;
+}
+
+/* ── Arrow / flow diagram ──────────────────────────────────────────── */
+.flow {
+  display: flex; align-items: stretch; gap: 0;
+  font-family: var(--font-mono);
+}
+.flow .node {
+  flex: 1;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 22px 24px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.flow .node .lbl {
+  font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted);
+}
+.flow .node .val {
+  font-size: 22px; color: var(--text);
+}
+.flow .arrow {
+  display: flex; align-items: center; justify-content: center;
+  color: var(--green);
+  padding: 0 14px;
+  font-size: 28px;
+}
+
+/* Utilities */
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+.row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+.row4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+.grow { flex: 1; }
+.push { margin-top: auto; }
+.mono-green { color: var(--green); font-family: var(--font-mono); }
+.mono-amber { color: var(--amber); font-family: var(--font-mono); }
+.mono-blue  { color: var(--blue);  font-family: var(--font-mono); }
+.mono-coral { color: var(--coral); font-family: var(--font-mono); }
+.dim { color: var(--muted); }
+
+/* ── Slide 1 — title slide ──────────────────────────────────────────── */
+.title-hero {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 0 120px;
+}
+.title-hero .cmd-line {
+  font-family: var(--font-mono);
+  font-size: 28px;
+  color: var(--muted);
+  margin-bottom: 36px;
+}
+.title-hero .cmd-line .prompt { color: var(--green); }
+.title-hero .cmd-line .cmd    { color: var(--text); }
+
+.title-hero h1 {
+  font-family: var(--font-sans);
+  font-size: 128px;
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+  font-weight: 500;
+  color: var(--text);
+  max-width: 1500px;
+}
+.title-hero h1 .accent { color: var(--green); }
+.title-hero .tag {
+  font-family: var(--font-mono);
+  font-size: 26px;
+  color: var(--text-dim);
+  margin-top: 32px;
+}
+.title-hero .byline {
+  margin-top: 70px;
+  display: flex; gap: 48px; align-items: baseline; flex-wrap: wrap;
+  font-family: var(--font-mono);
+  font-size: 22px;
+  color: var(--muted);
+}
+.title-hero .byline .who { color: var(--green); font-weight: 500; }
+.title-hero .byline .sep { color: var(--muted-2); }
+
+</style>
+</head>
+<body>
+
+<deck-stage width="1920" height="1080">
+
+  <!-- ========================= SLIDE 1 — Title ========================= -->
+  <section class="slide" data-label="Title">
+    <div class="title-hero">
+      <div class="cmd-line">
+        <span class="prompt">matteius@bench</span>:<span class="path">~/talks</span>$
+        <span class="cmd">./bsides_maine_2026</span>
+      </div>
+      <h1>From Firmware<br>Dumps to <span class="accent">Driver<br>Development</span>.</h1>
+      <div class="tag">An embedded camera hacking journey · 3 years in 40 minutes</div>
+      <div class="byline" style="font-size:26px">
+        <span class="who">Matt Davis</span>
+        <span class="sep">·</span>
+        <span>OpenSensor Engineering LLC</span>
+        <span class="sep">·</span>
+        <span>BSides Maine · 2026.05.30 · Hannaford Hall</span>
+      </div>
+      <div class="byline" style="margin-top:18px; font-size:26px">
+        <span>YouTube <span style="color:var(--green)">@MatteiusPi</span></span>
+        <span class="sep">·</span>
+        <span>GitHub <span style="color:var(--green)">matteius</span> / <span style="color:var(--green)">opensensor</span></span>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page"><span style="color:var(--green)">01</span><span class="sep">/</span>20</span>
+    </div>
+  </section>
+
+  <!-- ========================= SLIDE 2 — Firmware/SoC ========================= -->
+  <section class="slide" data-label="Firmware & SoC">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> man firmware_soc<span class="cursor"></span></span>
+      <span class="meta">§ 01 · primer</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">Chapter 01 · The Primer</div>
+      <h2 class="h-title">What is firmware? What is an SoC?</h2>
+      <div class="h-sub">// the terrain we're about to map</div>
+
+      <div class="row2" style="margin-top:56px; flex:1;">
+        <div class="card accent-green">
+          <div class="card-label">Firmware</div>
+          <h3 class="card-title">Software permanently stored on hardware</h3>
+          <ul>
+            <li>Lives on flash chips &mdash; SPI NOR, SPI NAND, eMMC</li>
+            <li>Layered: <code class="inline">bootloader → kernel → rootfs</code></li>
+            <li>Readable, modifiable, reflashable &mdash; if you can reach it</li>
+            <li>What actually runs when you plug the thing in</li>
+          </ul>
+        </div>
+        <div class="card accent-blue">
+          <div class="card-label">System on Chip</div>
+          <h3 class="card-title">CPU + RAM + peripherals on one die</h3>
+          <ul>
+            <li>ISP, NPU, crypto engines, GPIO, video encoders</li>
+            <li>Contains a <strong style="color:var(--blue)">boot ROM</strong> &mdash; immutable mask ROM</li>
+            <li>OTP fuses carry per-chip secrets &amp; config</li>
+            <li>The silicon decides what runs first. You don't.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page"><span style="color:var(--green)">02</span><span class="sep">/</span>20</span>
+    </div>
+  </section>
+
+  <!-- ========================= SLIDE 3 — Why Cameras ========================= -->
+  <section class="slide" data-label="Why Cameras">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> why cameras --explain</span>
+      <span class="meta">§ 01 · target selection</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">Target Rationale</div>
+      <h2 class="h-title">Why security cameras?</h2>
+      <div class="h-sub">// a perfect embedded research target, hiding in plain sight</div>
+
+      <div class="row4" style="margin-top:56px">
+        <div class="card accent-green">
+          <div class="card-label">01 · OS</div>
+          <h3 class="card-title" style="font-size:30px">Full Linux SoC</h3>
+          <p style="font-size:20px; color:var(--text-dim); margin:0">Real OS, real attack surface, real kernel. Nothing toy about it.</p>
+        </div>
+        <div class="card accent-blue">
+          <div class="card-label">02 · Pipeline</div>
+          <h3 class="card-title" style="font-size:30px">Video path</h3>
+          <p style="font-size:20px; color:var(--text-dim); margin:0">ISP · encoders · RTSP · ONVIF &mdash; a full complex stack to prod at.</p>
+        </div>
+        <div class="card accent-amber">
+          <div class="card-label">03 · Network</div>
+          <h3 class="card-title" style="font-size:30px">Connected by default</h3>
+          <p style="font-size:20px; color:var(--text-dim); margin:0">Wi-Fi, cloud APIs, local streaming. Firmware that phones home.</p>
+        </div>
+        <div class="card accent-coral">
+          <div class="card-label">04 · Stakes</div>
+          <h3 class="card-title" style="font-size:30px">Secure boot trend</h3>
+          <p style="font-size:20px; color:var(--text-dim); margin:0">Vendors are locking down newer models. The clock is ticking.</p>
+        </div>
+      </div>
+
+      <div class="push" style="margin-top:60px; font-family:var(--font-mono); font-size:22px; color:var(--muted);">
+        <span style="color:var(--green)">$</span> cheap · ubiquitous · complex · increasingly hostile to owners.
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page"><span style="color:var(--green)">03</span><span class="sep">/</span>20</span>
+    </div>
+  </section>
+
+  <!-- ========================= SLIDE 4 — Clip methods ========================= -->
+  <section class="slide" data-label="Firmware Extraction">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> flashrom --help</span>
+      <span class="meta">§ 02 · extraction</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">Chapter 02 · Getting the bits off</div>
+      <h2 class="h-title">Firmware extraction 101 &mdash; the clip methods</h2>
+      <div class="h-sub">// clip onto the flash, read everything</div>
+
+      <div style="margin-top:48px; display:grid; grid-template-columns: 1.2fr 1fr; gap:40px; flex:1;">
+        <div class="term">
+          <div class="term-head">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span class="title">terminal · flash_extraction</span>
+          </div>
+          <div class="term-body"><span class="prompt">$</span> <span class="cmd">flashrom -p ch341a_spi -r dump.bin</span>
+<span class="out">Reading flash... done. (8 MiB)</span>
+
+<span class="prompt">$</span> <span class="cmd">SNANDer -r nand_dump.bin</span>
+<span class="out">NAND: GD5F1GQ4UBYIG (128 MiB)</span>
+
+<span class="prompt">$</span> <span class="cmd">scriba read 0x0 0x800000 spi_dump.bin</span>
+
+<span class="cmt"># clip onto the flash chip, read the contents,</span>
+<span class="cmt"># and you have the entire firmware image.</span>
+<span class="hi">#                      ↑ the whole device, in a file.</span></div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:18px;">
+          <div class="card accent-amber">
+            <div class="card-label">Rig</div>
+            <h3 class="card-title" style="font-size:30px">SOIC-8 / SOIC-16 clip</h3>
+            <p style="font-size:20px; margin:0">A spring-loaded clothespin for your motherboard.</p>
+          </div>
+          <div class="card">
+            <div class="card-label">Targets</div>
+            <h3 class="card-title" style="font-size:30px">SPI NOR · SPI NAND</h3>
+            <p style="font-size:20px; margin:0">Different protocols, same idea: read the whole chip into a file.</p>
+          </div>
+          <div class="card accent-green">
+            <div class="card-label">Output</div>
+            <h3 class="card-title" style="font-size:30px">Full firmware dump</h3>
+            <p style="font-size:20px; margin:0">Bootloader, kernel, rootfs, keys, configs. Everything.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page"><span style="color:var(--green)">04</span><span class="sep">/</span>20</span>
+    </div>
+  </section>
+
+  <!-- ========================= SLIDE 5 — USB ========================= -->
+  <section class="slide" data-label="USB Extraction">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> dmesg | grep ingenic</span>
+      <span class="meta">§ 02 · extraction</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">No clip required</div>
+      <h2 class="h-title">USB extraction &mdash; when devices cooperate</h2>
+      <div class="h-sub">// many SoCs have a built-in boot / recovery mode; it's usually a gift</div>
+
+      <div class="row2" style="margin-top:56px; flex:1;">
+        <div style="display:flex; flex-direction:column; gap:22px;">
+          <div class="card">
+            <div class="card-label">Mechanism</div>
+            <h3 class="card-title" style="font-size:32px">Short a pin. Plug in USB.</h3>
+            <p>Boot ROM drops into a recovery protocol. No physical clip, no desoldering, no scorched PCB.</p>
+          </div>
+          <div class="card accent-blue">
+            <div class="card-label">Ingenic</div>
+            <h3 class="card-title" style="font-size:32px">The <span class="mono-blue">cloner</span> protocol</h3>
+            <p>Read flash, write flash, execute code &mdash; all over USB. Intended for factory reflash. We have other plans.</p>
+          </div>
+          <div class="pill green"><span class="dot"></span>Foreshadowing &mdash; this same protocol gave us boot ROM access.</div>
+        </div>
+
+        <div class="term" style="align-self:stretch;">
+          <div class="term-head">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span class="title">usb · cloner</span>
+          </div>
+          <div class="term-body"><span class="cmt"># short BOOT_SEL to GND, plug USB</span>
+<span class="prompt">$</span> <span class="cmd">lsusb | grep Ingenic</span>
+<span class="out">Bus 001 Device 042: </span><span class="hi">ID a108:1000 Ingenic T41</span>
+
+<span class="prompt">$</span> <span class="cmd">cloner --read 0x0 0x800000 flash.bin</span>
+<span class="out">Reading    [====================] 100%</span>
+<span class="out">Wrote 8388608 bytes to flash.bin</span>
+
+<span class="prompt">$</span> <span class="cmd">file flash.bin</span>
+<span class="out">flash.bin: </span><span class="hi">u-boot + kernel + rootfs</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page"><span style="color:var(--green)">05</span><span class="sep">/</span>20</span>
+    </div>
+  </section>
+
+  <!-- ========================= SLIDE 6 — Ingenic case study ========================= -->
+  <section class="slide" data-label="Ingenic Case Study">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> cat /proc/cpuinfo</span>
+      <span class="meta">§ 02 · target</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">Meet the target</div>
+      <h2 class="h-title">Ingenic &mdash; a perfect case study</h2>
+      <div class="h-sub">// excellent image quality · cheap devices · FCC teardowns on public record</div>
+
+      <div class="tbl" style="margin-top:48px; font-size:20px;">
+        <div class="row head" style="grid-template-columns: 1fr 1.4fr 2.2fr 1.2fr;">
+          <div>SoC</div><div>CPU</div><div>Typical Devices</div><div>Secure Boot?</div>
+        </div>
+        <div class="row" style="grid-template-columns: 1fr 1.4fr 2.2fr 1.2fr;">
+          <div class="mono-green" style="font-weight:600">T21 / T23</div>
+          <div>XBurst1 (MIPS)</div>
+          <div>Budget IP cameras</div>
+          <div class="dim">Yes (untested)</div>
+        </div>
+        <div class="row alt" style="grid-template-columns: 1fr 1.4fr 2.2fr 1.2fr;">
+          <div class="mono-green" style="font-weight:600">T31</div>
+          <div>XBurst1 (MIPS)</div>
+          <div>Video doorbells · mid-range cams</div>
+          <div class="bad" style="font-weight:600">Yes (flawed)</div>
+        </div>
+        <div class="row" style="grid-template-columns: 1fr 1.4fr 2.2fr 1.2fr;">
+          <div class="mono-green" style="font-weight:600">T40 / T41</div>
+          <div>XBurst2 (MIPS)</div>
+          <div>Pan/tilt cams · newer devices</div>
+          <div class="bad" style="font-weight:600">Yes (flawed)</div>
+        </div>
+        <div class="row alt" style="grid-template-columns: 1fr 1.4fr 2.2fr 1.2fr;">
+          <div class="mono-green" style="font-weight:600">A1</div>
+          <div>XBurst2 (MIPS)</div>
+          <div>NVR-style devices</div>
+          <div class="dim">Yes (untested)</div>
+        </div>
+      </div>
+
+      <div class="push card accent-green" style="margin-top:40px; display:flex; align-items:center; justify-content:space-between; padding:22px 32px;">
+        <div>
+          <div class="card-label" style="margin:0">Open source alternative firmware</div>
+          <div style="font-family:var(--font-sans); font-size:28px; color:var(--text); margin-top:4px;">Thingino &mdash; a full Linux rebuild for these cameras</div>
+        </div>
+        <div class="mono-green" style="font-size:26px">thingino.com →</div>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page"><span style="color:var(--green)">06</span><span class="sep">/</span>20</span>
+    </div>
+  </section>
+
+  <!-- ========================= SLIDE 7 — Why stuck on old kernels ========================= -->
+  <section class="slide" data-label="ISP Driver Problem">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> uname -r</span>
+      <span class="meta">§ 02 · the blob problem</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">The ISP Problem</div>
+      <h2 class="h-title">Why are we still stuck on Linux 3.10 / 4.4?</h2>
+      <div class="h-sub">// closed-source blobs hold the video pipeline hostage</div>
+
+      <div class="row2" style="margin-top:48px; flex:1;">
+        <div class="card accent-coral">
+          <div class="card-label">The Problem</div>
+          <h3 class="card-title">Vendor SDKs ship binary-only kernel modules</h3>
+          <ul>
+            <li>ISP (Image Signal Processor) driver is the worst offender</li>
+            <li>Compiled against kernel 3.10 &mdash; cannot port forward</li>
+            <li>No video without these blobs</li>
+            <li>So the whole ecosystem is frozen in a decade-old kernel</li>
+          </ul>
+        </div>
+        <div class="card accent-green">
+          <div class="card-label">The RE Project</div>
+          <h3 class="card-title">Reverse-engineer. Rewrite. Set free.</h3>
+          <ul>
+            <li>Goal: open-source replacement, modern kernels</li>
+            <li>Binary Ninja + Ghidra + AI-assisted analysis</li>
+            <li>Register-by-register reconstruction of the pipeline</li>
+            <li>Working drivers on 5.x kernels &mdash; and rising</li>
+          </ul>
+          <div class="links" style="margin-top:20px">
+            <a>github.com/opensensor/isp</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page"><span style="color:var(--green)">07</span><span class="sep">/</span>20</span>
+    </div>
+  </section>
+
+  <!-- ========================= SLIDE 8 — Secure boot motivation ========================= -->
+  <section class="slide" data-label="Secure Boot Motivation">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> whose_device_is_it_anyway.sh</span>
+      <span class="meta">§ 03 · the wall</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">Chapter 03 · The Wall</div>
+      <h2 class="h-title">Newer devices &mdash; secure boot enabled.</h2>
+
+      <div style="margin-top:64px; max-width:1500px;">
+        <p style="font-size:40px; line-height:1.3; color:var(--text); font-family:var(--font-sans); font-weight:400;">
+          Better sensors. Better hardware. But <span class="mono-coral" style="font-weight:500">OEM-signed bootloaders</span> mean
+          <span style="color:var(--text)">you</span> can't run <span style="color:var(--text)">your</span> code on hardware
+          <span style="color:var(--text)">you</span> physically possess.
+        </p>
+
+        <div style="margin-top:64px; border-left: 4px solid var(--green); padding: 18px 0 18px 32px;">
+          <div class="mono-green" style="font-size:18px; letter-spacing:0.2em; text-transform:uppercase; margin-bottom:8px;">Ask</div>
+          <div style="font-size:36px; color:var(--text); line-height:1.25; font-weight:500; font-family:var(--font-sans);">
+            When did "secure boot" come to mean<br>
+            <em style="font-style:italic; color:var(--green)">the end user loses control</em>?
+          </div>
+        </div>
+
+        <div class="push" style="margin-top:72px; font-family:var(--font-mono); font-size:22px; color:var(--muted);">
+          <span style="color:var(--green)">→</span> This is the motivation for everything that follows.
+        </div>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page"><span style="color:var(--green)">08</span><span class="sep">/</span>20</span>
+    </div>
+  </section>
+
+  <!-- ========================= SLIDE 9 — Secure Boot 101 ========================= -->
+  <section class="slide" data-label="Secure Boot 101">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> how_does_secure_boot_work</span>
+      <span class="meta">§ 03 · primer</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">How it's supposed to work</div>
+      <h2 class="h-title">Secure boot 101</h2>
+      <div class="h-sub">// burnt fuses, mask ROM, signature verify, execute &mdash; or reject</div>
+
+      <div style="margin-top:64px; display:grid; grid-template-columns: repeat(4, 1fr) auto repeat(2, 1fr); gap:14px; align-items:stretch;">
+        <div class="card accent-amber" style="padding:24px">
+          <div class="card-label">01</div>
+          <h3 class="card-title" style="font-size:24px; margin-bottom:8px;">OTP Fuses</h3>
+          <p style="font-size:18px; margin:0">Public-key hash burnt into silicon. One-time, permanent.</p>
+        </div>
+        <div class="card" style="padding:24px">
+          <div class="card-label">02</div>
+          <h3 class="card-title" style="font-size:24px; margin-bottom:8px;">Boot ROM</h3>
+          <p style="font-size:18px; margin:0">Mask ROM code. Immutable. The first thing that runs.</p>
+        </div>
+        <div class="card accent-blue" style="padding:24px">
+          <div class="card-label">03</div>
+          <h3 class="card-title" style="font-size:24px; margin-bottom:8px;">Verify</h3>
+          <p style="font-size:18px; margin:0">RSA / SHA check on the SPL image using the fused key.</p>
+        </div>
+        <div class="card" style="padding:24px">
+          <div class="card-label">04</div>
+          <h3 class="card-title" style="font-size:24px; margin-bottom:8px;">Decide</h3>
+          <p style="font-size:18px; margin:0">Signature valid? Execute. Invalid? Reject.</p>
+        </div>
+
+        <div style="display:flex; align-items:center; color:var(--muted); font-family:var(--font-mono); font-size:40px; padding:0 10px;">→</div>
+
+        <div class="card accent-green" style="padding:24px">
+          <div class="card-label">OK</div>
+          <h3 class="card-title" style="font-size:24px; margin-bottom:8px; color:var(--green)">Execute</h3>
+          <p style="font-size:18px; margin:0">Signed vendor firmware runs. This is how it's supposed to end.</p>
+        </div>
+        <div class="card accent-coral" style="padding:24px">
+          <div class="card-label">FAIL</div>
+          <h3 class="card-title" style="font-size:24px; margin-bottom:8px; color:var(--coral)">Reject</h3>
+          <p style="font-size:18px; margin:0">Device halts. Brick screen. You own nothing.</p>
+        </div>
+      </div>
+
+      <div class="push" style="margin-top:64px; padding:24px 32px; background:var(--panel); border:1px dashed var(--border-2); border-radius:10px; font-family:var(--font-mono); font-size:22px; color:var(--text-dim);">
+        <span style="color:var(--amber)">!</span> The model is sound. The key question: <span class="mono-green">is it actually implemented right?</span>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page"><span style="color:var(--green)">09</span><span class="sep">/</span>20</span>
+    </div>
+  </section>
+
+  <!-- ========================= SLIDE 10 — Ethics ========================= -->
+  <section class="slide" data-label="Ethics">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> # a brief disclaimer</span>
+      <span class="meta">§ 03 · ethics</span>
+    </div>
+    <div class="body" style="justify-content:center;">
+      <div class="eyebrow">A note before we proceed</div>
+      <h2 class="h-title" style="margin-top:8px; font-size:76px; max-width:1500px;">
+        Secure boot exists for <em style="font-style:italic; color:var(--green)">good reasons</em>.
+      </h2>
+
+      <div style="margin-top:48px; display:grid; grid-template-columns: 1fr 1fr; gap:32px;">
+        <div class="card accent-coral">
+          <div class="card-label">Out of scope</div>
+          <h3 class="card-title">Safety-critical systems</h3>
+          <p style="font-size:24px;">Automotive. Medical. Aviation. Industrial control. <strong style="color:var(--coral)">Do not tamper</strong>. Lives depend on firmware integrity. I stand by that.</p>
+        </div>
+        <div class="card accent-green">
+          <div class="card-label">In scope</div>
+          <h3 class="card-title">A $25 camera in your living room</h3>
+          <p style="font-size:24px;">That's a different conversation entirely. Your hardware. Your software. Your ability to audit, patch, and replace it yourself.</p>
+        </div>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page"><span style="color:var(--green)">10</span><span class="sep">/</span>20</span>
+    </div>
+  </section>
+
+  <!-- ========================= SLIDE 11 — Timeline ========================= -->
+  <section class="slide" data-label="3-Year Timeline">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> git log --since=2023 --oneline</span>
+      <span class="meta">§ 04 · research</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">Chapter 04 · The Hunt</div>
+      <h2 class="h-title">Three years studying secure-boot bypass</h2>
+
+      <div style="margin-top:56px; display:grid; grid-template-columns: 140px 1fr; gap:20px 40px; align-items:start; font-family:var(--font-mono);">
+        <!-- 2023 -->
+        <div style="font-size:44px; font-weight:600; color:var(--blue); padding-top:8px;">2023</div>
+        <div class="card accent-blue">
+          <h3 class="card-title" style="font-size:28px">Inspired by Cristofaro Mune</h3>
+          <p style="font-size:22px; color:var(--text-dim); margin:0">"Breaking SoC Security by Glitching OTP Data Transfers" &mdash; hardwear.io USA. The idea: break verification, don't forge signatures.</p>
+        </div>
+
+        <!-- 2024 -->
+        <div style="font-size:44px; font-weight:600; color:var(--coral); padding-top:8px;">2024</div>
+        <div class="card accent-coral">
+          <h3 class="card-title" style="font-size:28px">First SoC swaps</h3>
+          <p style="font-size:22px; color:var(--text-dim); margin:0">The caveman approach: desolder, swap in a virgin chip, flash. Crude. Effective. Absolutely not scalable.</p>
+        </div>
+
+        <!-- 2026 -->
+        <div style="font-size:44px; font-weight:600; color:var(--green); padding-top:8px;">2026</div>
+        <div class="card accent-green">
+          <h3 class="card-title" style="font-size:28px">Boot ROM extraction via USB protocol</h3>
+          <p style="font-size:22px; color:var(--text-dim); margin:0">We discovered the cloner protocol exposes the boot ROM itself. Suddenly we had the actual first-stage code to read.</p>
+        </div>
+
+        <!-- March -->
+        <div style="font-size:28px; font-weight:500; color:var(--green); padding-top:12px;">March</div>
+        <div class="card accent-green" style="border-style:dashed;">
+          <h3 class="card-title" style="font-size:28px">Two vulnerability classes identified</h3>
+          <p style="font-size:22px; color:var(--text-dim); margin:0">T31 verification flaw · T41 init-table bypass. Software-only. No glitchers required.</p>
+        </div>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page"><span style="color:var(--green)">11</span><span class="sep">/</span>20</span>
+    </div>
+  </section>
+
+  <!-- ========================= SLIDE 12 — Mune spark ========================= -->
+  <section class="slide" data-label="The Spark">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> # the spark</span>
+      <span class="meta">§ 04 · prior art</span>
+    </div>
+    <div class="body" style="justify-content:center;">
+      <div class="eyebrow">The Spark</div>
+      <h2 class="h-display" style="font-size:84px; max-width:1600px;">Voltage glitching <span style="color:var(--muted)">taught us</span> there's a shortcut.</h2>
+
+      <div style="margin-top:48px; padding:32px 40px; background:var(--panel); border-left:4px solid var(--amber); border-radius:4px; max-width:1500px;">
+        <div class="mono-amber" style="font-size:16px; letter-spacing:0.2em; text-transform:uppercase; margin-bottom:10px">Prior art</div>
+        <div style="font-size:34px; color:var(--text); font-family:var(--font-sans); line-height:1.25; margin-bottom:12px;">
+          "Breaking SoC Security by Glitching OTP Data Transfers"
+        </div>
+        <div class="mono-tight" style="color:var(--muted); font-size:22px;">Cristofaro Mune &middot; hardwear.io USA 2022</div>
+      </div>
+
+      <div style="margin-top:48px; max-width:1500px;">
+        <p style="font-size:30px; line-height:1.5; color:var(--text);">
+          You don't need the signing key if you can corrupt the <strong style="color:var(--green)">verification process itself.</strong>
+        </p>
+        <p style="font-size:26px; line-height:1.5; color:var(--text-dim); margin-top:20px;">
+          What if we could do that without a glitcher, a power probe, or a laser?<br>
+          <span style="color:var(--green)">→</span> We started looking for <em style="color:var(--text); font-style:italic">logical</em> flaws instead of physical glitches.
+        </p>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page"><span style="color:var(--green)">12</span><span class="sep">/</span>20</span>
+    </div>
+  </section>
+
+  <!-- ========================= SLIDE 13 — SoC swaps ========================= -->
+  <section class="slide" data-label="SoC Swaps">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> hot_air_gun --temp 380</span>
+      <span class="meta">§ 04 · brute approach</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">Detour · 2024</div>
+      <h2 class="h-title">SoC swaps &mdash; the caveman approach</h2>
+      <div class="h-sub">// when spare SoCs are cheap and plentiful</div>
+
+      <div class="row2" style="margin-top:40px; flex:1;">
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <div class="card accent-amber" style="padding:22px 28px">
+            <div class="card-label">Insight</div>
+            <h3 class="card-title" style="font-size:28px; margin-bottom:10px">Fuses are per chip.</h3>
+            <p style="font-size:22px; margin:0">No fuses burnt &rarr; no secure boot active. The silicon still has the capability; it's just never armed.</p>
+          </div>
+          <div class="card" style="padding:22px 28px">
+            <div class="card-label">Method</div>
+            <h3 class="card-title" style="font-size:28px; margin-bottom:10px">Desolder · swap · reflash</h3>
+            <p style="font-size:22px; margin:0">Hot air. Tweezers. A virgin chip from a reel. Some luck.</p>
+          </div>
+          <div class="card accent-coral" style="padding:22px 28px">
+            <div class="card-label">Reality check</div>
+            <h3 class="card-title" style="font-size:28px; margin-bottom:10px">Not scalable</h3>
+            <p style="font-size:22px; margin:0">One chip per board, one board at a time. Useful for research &mdash; useless for users. We wanted a software-only path.</p>
+          </div>
+        </div>
+
+        <div class="ph-img" style="min-height:auto; align-self:stretch; font-size:24px;">
+          [ PHOTO &middot; bench shot of SoC swap in progress<br>virgin T41 on reflow station ]
+        </div>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page"><span style="color:var(--green)">13</span><span class="sep">/</span>20</span>
+    </div>
+  </section>
+
+  <!-- ========================= SLIDE 14 — Boot ROM analysis ========================= -->
+  <section class="slide" data-label="Boot ROM Analysis">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> binja bootrom.bin</span>
+      <span class="meta">§ 04 · breakthrough</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">Breakthrough</div>
+      <h2 class="h-title">Boot ROM analysis</h2>
+      <div class="h-sub">// extracting the immutable code that decides everything</div>
+
+      <div class="term" style="margin-top:48px;">
+        <div class="term-head">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="title">terminal · bootrom_extraction</span>
+        </div>
+        <div class="term-body"><span class="cmt"># USB cloner protocol RE revealed:</span>
+<span class="cmt"># the boot ROM itself is readable.</span>
+<span class="prompt">$</span> <span class="cmd">python3 read_bootrom.py --soc t41 -o t41_bootrom.bin</span>
+<span class="out">[+] handshake ok</span>
+<span class="out">[+] reading 65536 bytes from mask ROM...</span>
+<span class="out">[+] done.</span>
+
+<span class="prompt">$</span> <span class="cmd">file t41_bootrom.bin</span>
+<span class="out">t41_bootrom.bin: data, 65536 bytes  </span><span class="hi"># the keys to the kingdom</span></div>
+      </div>
+
+      <div class="row2" style="margin-top:36px; gap:24px;">
+        <div class="card accent-blue">
+          <div class="card-label">Tooling</div>
+          <h3 class="card-title" style="font-size:28px">Binary Ninja + Smart Diff MCP</h3>
+          <p style="font-size:20px; margin:0">Decompilation streamed to the LLM. Human-in-the-loop vulnerability hunting.</p>
+        </div>
+        <div class="card accent-green">
+          <div class="card-label">Result</div>
+          <h3 class="card-title" style="font-size:28px">Real analysis, for the first time</h3>
+          <p style="font-size:20px; margin:0">We stopped guessing. We started reading the actual code that runs first.</p>
+        </div>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page"><span style="color:var(--green)">14</span><span class="sep">/</span>20</span>
+    </div>
+  </section>
+
+  <!-- ========================= SLIDE 15 — Two vuln classes ========================= -->
+  <section class="slide" data-label="Two Vuln Classes">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> cat findings.md</span>
+      <span class="meta">§ 05 · findings</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">Chapter 05 · What we found</div>
+      <h2 class="h-title">Two vulnerability classes</h2>
+
+      <div class="row2" style="margin-top:48px; flex:1;">
+        <div class="card accent-coral">
+          <div class="card-label">Bug class 01 · T31</div>
+          <h3 class="card-title" style="font-size:34px">32-bit verification</h3>
+          <ul>
+            <li>Verifier checks <strong style="color:var(--coral)">one 32-bit word</strong> of the RSA output</li>
+            <li>RSA-2048 / SHA-256 reduced to a 32-bit brute force</li>
+            <li>~<strong style="color:var(--coral)">217 seconds</strong> to forge an image</li>
+            <li class="dim">The crypto is there &mdash; just barely enforced.</li>
+          </ul>
+        </div>
+        <div class="card accent-amber">
+          <div class="card-label">Bug class 02 · T32 / T40 / T41 / A1</div>
+          <h3 class="card-title" style="font-size:34px">Init-table bypass</h3>
+          <ul>
+            <li>ROM parses an init table <strong style="color:var(--amber)">before</strong> verifying the signature</li>
+            <li>Init table supports full 32-bit write addresses</li>
+            <li>Write to SRAM &rarr; corrupt secure-boot state &rarr; skip verify</li>
+            <li class="dim">The verification is sound. It just never runs.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="push" style="margin-top:48px; display:flex; justify-content:space-between; align-items:center; font-family:var(--font-mono); font-size:22px; color:var(--muted);">
+        <span><span class="mono-green">→</span> Different chips. Different flaws. Same outcome: unsigned code runs.</span>
+        <span class="pill green"><span class="dot"></span>coordinated disclosure in progress</span>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page"><span style="color:var(--green)">15</span><span class="sep">/</span>20</span>
+    </div>
+  </section>
+
+  <!-- ========================= SLIDE 16 — AI-assisted RE ========================= -->
+  <section class="slide" data-label="AI-Assisted RE">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> mcp.pipe(binja, claude)</span>
+      <span class="meta">§ 05 · method</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">Method Note</div>
+      <h2 class="h-title">AI-assisted reverse engineering</h2>
+      <div class="h-sub">// Binary Ninja + MCP server + frontier LLM as a research partner</div>
+
+      <div style="margin-top:48px; display:grid; grid-template-columns: 1fr 1fr; gap:28px; flex:1;">
+        <div style="display:flex; flex-direction:column; gap:20px;">
+          <div class="card accent-blue">
+            <div class="card-label">Pipeline</div>
+            <h3 class="card-title" style="font-size:28px">Smart Diff MCP</h3>
+            <p style="font-size:20px; margin:0">Streams Binary Ninja decompilation into Claude / GPT frontier models. Live Q&amp;A over real decomp.</p>
+          </div>
+          <div class="card accent-green">
+            <div class="card-label">Cross-SoC comparison</div>
+            <h3 class="card-title" style="font-size:28px">T31 vs T41 boot ROM</h3>
+            <p style="font-size:20px; margin:0">The LLM spotted what the vendor didn't: init-table parsing happens <em>before</em> the signature check.</p>
+          </div>
+          <div class="card accent-amber">
+            <div class="card-label">Independent hit</div>
+            <h3 class="card-title" style="font-size:28px">T31 32-bit compare</h3>
+            <p style="font-size:20px; margin:0">The same pipeline flagged the partial compare on T31. Two flaws, one afternoon.</p>
+          </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; justify-content:center; gap:24px;">
+          <div style="text-align:center; padding:40px; background:var(--panel); border:1px solid var(--border); border-radius:12px;">
+            <div class="mono-green" style="font-size:16px; letter-spacing:0.2em; text-transform:uppercase; margin-bottom:10px">Function Similarity</div>
+            <div style="font-size:120px; font-family:var(--font-mono); font-weight:600; color:var(--green); line-height:1;">86.6<span style="font-size:60px; color:var(--green-dim)">%</span></div>
+            <div style="color:var(--text-dim); font-size:20px; margin-top:12px; font-family:var(--font-mono);">T40 &harr; T41 boot ROMs</div>
+          </div>
+          <div class="card">
+            <div class="card-label">Takeaway</div>
+            <h3 class="card-title" style="font-size:26px">Human intuition + AI pattern matching</h3>
+            <p style="font-size:20px; margin:0">The humans still do the hard part. The AI is a force multiplier on "where should I even look?"</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page"><span style="color:var(--green)">16</span><span class="sep">/</span>20</span>
+    </div>
+  </section>
+
+  <!-- ========================= SLIDE 17 — T31 ========================= -->
+  <section class="slide" data-label="T31 32-bit Flaw">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> forge --target t31 --time 217s</span>
+      <span class="meta">§ 06 · case study</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">Case study · T31X consumer video doorbell</div>
+      <h2 class="h-title">T31: the 32-bit verification flaw</h2>
+
+      <div class="row2" style="margin-top:40px; flex:1;">
+        <div class="card accent-coral">
+          <div class="card-label">The Attack</div>
+          <h3 class="card-title" style="font-size:30px">Keep the header, forge the body</h3>
+          <ol style="padding-left:0; list-style:none; margin:0;">
+            <li style="font-size:22px; color:var(--text-dim); padding:8px 0 8px 40px; position:relative;"><span class="mono-coral" style="position:absolute; left:0; font-weight:600;">01</span>Keep vendor-signed header intact</li>
+            <li style="font-size:22px; color:var(--text-dim); padding:8px 0 8px 40px; position:relative;"><span class="mono-coral" style="position:absolute; left:0; font-weight:600;">02</span>Replace SPL payload with Thingino</li>
+            <li style="font-size:22px; color:var(--text-dim); padding:8px 0 8px 40px; position:relative;"><span class="mono-coral" style="position:absolute; left:0; font-weight:600;">03</span>Add a 4-byte nonce inside the payload</li>
+            <li style="font-size:22px; color:var(--text-dim); padding:8px 0 8px 40px; position:relative;"><span class="mono-coral" style="position:absolute; left:0; font-weight:600;">04</span>Brute force until <code class="inline">SHA-256 word[0]</code> matches</li>
+            <li style="font-size:22px; color:var(--text-dim); padding:8px 0 8px 40px; position:relative;"><span class="mono-coral" style="position:absolute; left:0; font-weight:600;">05</span>Flash &rarr; device accepts the forged image</li>
+          </ol>
+          <div style="margin-top:16px; padding:14px 16px; background:rgba(255,106,92,0.08); border-left:3px solid var(--coral); font-family:var(--font-mono); font-size:20px; color:var(--text);">
+            The verifier checks <strong style="color:var(--coral)">4 bytes</strong> of a 32-byte hash.
+          </div>
+        </div>
+
+        <div class="card accent-green">
+          <div class="card-label">Results · live on hardware</div>
+          <h3 class="card-title" style="font-size:30px">Numbers</h3>
+          <div class="stats" style="margin-top:8px">
+            <div class="stat">
+              <span class="label">Search rate</span>
+              <span class="value hi">15.14 MH/s</span>
+            </div>
+            <div class="stat">
+              <span class="label">Trials</span>
+              <span class="value">3.29 &times; 10<sup>9</sup></span>
+            </div>
+            <div class="stat">
+              <span class="label">Wall time</span>
+              <span class="value hi">~217 sec</span>
+            </div>
+            <div class="stat">
+              <span class="label">Target word</span>
+              <span class="value am mono">0x3024cc99</span>
+            </div>
+            <div class="stat">
+              <span class="label">Nonce found</span>
+              <span class="value hi mono">0xd0f2afda</span>
+            </div>
+          </div>
+          <div style="margin-top:16px; font-family:var(--font-mono); font-size:20px; color:var(--muted);">
+            <span class="mono-green">$</span> your living-room doorbell, owned with a laptop.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page"><span style="color:var(--green)">17</span><span class="sep">/</span>20</span>
+    </div>
+  </section>
+
+  <!-- ========================= SLIDE 18 — Newer SoCs ========================= -->
+  <section class="slide" data-label="Newer SoCs">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> diff t31 t41 | grep crypto</span>
+      <span class="meta">§ 06 · comparison</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">The sequel</div>
+      <h2 class="h-title">Newer SoCs fixed the crypto&hellip; right?</h2>
+
+      <div class="row2" style="margin-top:56px;">
+        <div class="card accent-coral">
+          <div class="card-label">T31 · older</div>
+          <h3 class="card-title" style="font-size:32px">32-bit partial compare</h3>
+          <p style="font-size:22px;">Crypto is <strong style="color:var(--coral)">broken</strong>. Forge an image in under four minutes.</p>
+        </div>
+        <div class="card accent-green">
+          <div class="card-label">T32 / T40 / T41 / A1 · newer</div>
+          <h3 class="card-title" style="font-size:32px">Full 32-byte RSA-PSS compare</h3>
+          <p style="font-size:22px;">Crypto is <strong style="color:var(--green)">sound</strong>. Good job. <span class="dim">&hellip;wait.</span></p>
+        </div>
+      </div>
+
+      <div style="margin-top:56px; padding:36px 44px; background:var(--panel); border:1px solid var(--amber); border-left:6px solid var(--amber); border-radius:10px;">
+        <div class="mono-amber" style="font-size:16px; letter-spacing:0.22em; text-transform:uppercase; margin-bottom:14px;">but they introduced a new flaw</div>
+        <div style="font-size:32px; color:var(--text); line-height:1.35; font-family:var(--font-sans);">
+          The newer boot ROMs load fuse state into SRAM via an <span class="mono-amber">init table</span>
+          <em style="color:var(--amber); font-style:italic">before</em> verifying the signature chain &mdash;
+          something the T31 did <em>not</em> do.
+        </div>
+        <div class="push" style="margin-top:20px; font-family:var(--font-mono); font-size:22px; color:var(--muted);">
+          <span style="color:var(--amber)">→</span> the fix created a new attack surface.
+        </div>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page"><span style="color:var(--green)">18</span><span class="sep">/</span>20</span>
+    </div>
+  </section>
+
+  <!-- ========================= SLIDE 19 — T41 bypass ========================= -->
+  <section class="slide" data-label="T41 Bypass">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> write 0x0 → 0x80000090</span>
+      <span class="meta">§ 06 · case study</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">Case study · T41NQ IP camera</div>
+      <h2 class="h-title">T41: secure boot ON &rarr; secure boot OFF</h2>
+      <div class="h-sub">// pre-verification init-table injection</div>
+
+      <div class="flow" style="margin-top:40px;">
+        <div class="node" style="border-color: rgba(106,178,255,0.4)">
+          <div class="lbl" style="color:var(--blue)">Step 01</div>
+          <div class="val">ROM reads SPL header</div>
+          <div class="dim mono" style="font-size:16px;">normal boot path</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node" style="border-color: rgba(245,165,36,0.4)">
+          <div class="lbl" style="color:var(--amber)">Step 02</div>
+          <div class="val">Parse init table at +0x100</div>
+          <div class="dim mono" style="font-size:16px;">before signature check</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node" style="border-color: rgba(255,106,92,0.5); background:rgba(255,106,92,0.04)">
+          <div class="lbl" style="color:var(--coral)">Step 03 · payload</div>
+          <div class="val mono-coral mono">write 0x0 → 0x80000090</div>
+          <div class="dim mono" style="font-size:16px;">clear the secure-boot flag in SRAM</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node" style="border-color: rgba(0,227,140,0.5); background:rgba(0,227,140,0.04)">
+          <div class="lbl" style="color:var(--green)">Step 04</div>
+          <div class="val mono-green">Check state → skip verify</div>
+          <div class="dim mono" style="font-size:16px;">rom thinks boot is open</div>
+        </div>
+      </div>
+
+      <div class="term" style="margin-top:40px;">
+        <div class="term-head">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="title">serial console · secureboot T41 device</span>
+        </div>
+        <div class="term-body" style="font-size:21px;"><span class="out">Thingino U-Boot for Ingenic T41NQ SPL 2013.07</span>
+<span class="out">image entry point: </span><span class="hi">0x80100000</span>
+<span class="out">Thingino U-Boot for Ingenic 2013.07</span>
+<span class="out">Now running in RAM - U-Boot at: </span><span class="hi">87f54000</span>
+<span class="cmt"># secureboot-fused device. running unsigned Thingino firmware.</span></div>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page"><span style="color:var(--green)">19</span><span class="sep">/</span>20</span>
+    </div>
+  </section>
+
+  <!-- ========================= SLIDE 20 — Bigger picture ========================= -->
+  <section class="slide" data-label="The Bigger Picture">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> ./summary.sh</span>
+      <span class="meta">§ 07 · what it means</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">Chapter 07 · The Bigger Picture</div>
+      <h2 class="h-title">State of the disclosure</h2>
+
+      <div class="tbl" style="margin-top:40px;">
+        <div class="row head" style="grid-template-columns: 1fr 2fr 2fr;">
+          <div>SoC</div><div>Vuln Class</div><div>Hardware Confirmed</div>
+        </div>
+        <div class="row" style="grid-template-columns: 1fr 2fr 2fr;">
+          <div class="mono-green" style="font-weight:600">T31</div>
+          <div>32-bit partial verify</div>
+          <div class="ok" style="font-weight:600">✓ T31X video doorbell</div>
+        </div>
+        <div class="row alt" style="grid-template-columns: 1fr 2fr 2fr;">
+          <div class="mono-green" style="font-weight:600">T32</div>
+          <div>Init-table bypass</div>
+          <div class="dim">· not yet (ROM evidence)</div>
+        </div>
+        <div class="row" style="grid-template-columns: 1fr 2fr 2fr;">
+          <div class="mono-green" style="font-weight:600">T40</div>
+          <div>Init-table bypass</div>
+          <div class="dim">· not yet (ROM evidence)</div>
+        </div>
+        <div class="row alt" style="grid-template-columns: 1fr 2fr 2fr;">
+          <div class="mono-green" style="font-weight:600">T41</div>
+          <div>Init-table bypass</div>
+          <div class="ok" style="font-weight:600">✓ T41NQ IP camera</div>
+        </div>
+        <div class="row" style="grid-template-columns: 1fr 2fr 2fr;">
+          <div class="mono-green" style="font-weight:600">A1</div>
+          <div>Init-table bypass</div>
+          <div class="dim">· not yet (ROM evidence)</div>
+        </div>
+      </div>
+
+      <div style="margin-top:36px; padding:28px 36px; background:var(--panel-2); border:1px solid var(--border); border-radius:12px;">
+        <div class="mono-green" style="font-size:16px; letter-spacing:0.22em; text-transform:uppercase; margin-bottom:10px">Corollary</div>
+        <div style="font-size:28px; color:var(--text); line-height:1.4;">
+          Non-secureboot A1 chip tricked into thinking it <em>was</em> enabled
+          &mdash; <span class="mono-green">the reverse must also be true</span>.
+        </div>
+      </div>
+
+      <div class="push" style="margin-top:28px; display:flex; justify-content:space-between; align-items:center; font-family:var(--font-mono); font-size:22px;">
+        <span class="pill green"><span class="dot"></span>coordinated disclosure in progress with Ingenic and downstream vendors</span>
+        <span style="color:var(--muted)"><span class="mono-green">thingino.com</span> · <span class="mono-green">github.com/opensensor</span> · <span class="mono-green">@MatteiusPi</span></span>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis · thank you</span>
+      <span class="page"><span style="color:var(--green)">20</span><span class="sep">/</span>20</span>
+    </div>
+  </section>
+
+</deck-stage>
+
+<noscript>
+  <div style="padding:40px;color:#fff;background:#000;font-family:monospace;">
+    JavaScript is required for this deck to render.
+  </div>
+</noscript>
+
+<script>
+/**
+ * <deck-stage> — reusable web component for HTML decks.
+ *
+ * Handles:
+ *  (a) speaker notes — reads <script type="application/json" id="speaker-notes">
+ *      and posts {slideIndexChanged: N} to the parent window on nav.
+ *  (b) keyboard navigation — ←/→, PgUp/PgDn, Space, Home/End, number keys.
+ *  (c) press R to reset to slide 0 (with a tasteful keyboard hint).
+ *  (d) bottom-center overlay showing slide count + hints, fades out on idle.
+ *  (e) auto-scaling — inner canvas is a fixed design size (default 1920×1080)
+ *      scaled with `transform: scale()` to fit the viewport, letterboxed.
+ *      Set the `noscale` attribute to render at authored size (1:1) — the
+ *      PPTX exporter sets this so its DOM capture sees unscaled geometry.
+ *  (f) print — `@media print` lays every slide out as its own page at the
+ *      design size, so the browser's Print → Save as PDF produces a clean
+ *      one-page-per-slide PDF with no extra setup.
+ *
+ * Slides are HIDDEN, not unmounted. Non-active slides stay in the DOM with
+ * `visibility: hidden` + `opacity: 0`, so their state (videos, iframes,
+ * form inputs, React trees) is preserved across navigation.
+ *
+ * Lifecycle event — the component dispatches a `slidechange` CustomEvent on
+ * itself whenever the active slide changes (including the initial mount).
+ * The event bubbles and composes out of shadow DOM, so you can listen on
+ * the <deck-stage> element or on document:
+ *
+ *   document.querySelector('deck-stage').addEventListener('slidechange', (e) => {
+ *     e.detail.index         // new 0-based index
+ *     e.detail.previousIndex // previous index, or -1 on init
+ *     e.detail.total         // total slide count
+ *     e.detail.slide         // the new active slide element
+ *     e.detail.previousSlide // the prior slide element, or null on init
+ *     e.detail.reason        // 'init' | 'keyboard' | 'click' | 'tap' | 'api'
+ *   });
+ *
+ * Persistence: current slide index is saved to localStorage keyed by the
+ * document path, so refresh returns you to the same place.
+ *
+ * Usage:
+ *   <deck-stage width="1920" height="1080">
+ *     <section data-label="Title">...</section>
+ *     <section data-label="Agenda">...</section>
+ *   </deck-stage>
+ *
+ * Slides are the direct element children of <deck-stage>. Each slide is
+ * automatically tagged with:
+ *   - data-screen-label="NN Label"   (1-indexed, for comment flow)
+ *   - data-om-validate="no_overflowing_text,no_overlapping_text,slide_sized_text"
+ */
+
+(() => {
+  const DESIGN_W_DEFAULT = 1920;
+  const DESIGN_H_DEFAULT = 1080;
+  const STORAGE_PREFIX = 'deck-stage:slide:';
+  const OVERLAY_HIDE_MS = 1800;
+  const VALIDATE_ATTR = 'no_overflowing_text,no_overlapping_text,slide_sized_text';
+
+  const pad2 = (n) => String(n).padStart(2, '0');
+
+  const stylesheet = `
+    :host {
+      position: fixed;
+      inset: 0;
+      display: block;
+      background: #000;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    .stage {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .canvas {
+      position: relative;
+      transform-origin: center center;
+      flex-shrink: 0;
+      background: #fff;
+      will-change: transform;
+    }
+
+    /* Slides live in light DOM (via <slot>) so authored CSS still applies.
+       We absolutely position each slotted child to stack them. */
+    ::slotted(*) {
+      position: absolute !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      box-sizing: border-box !important;
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
+      visibility: hidden;
+    }
+    ::slotted([data-deck-active]) {
+      opacity: 1;
+      pointer-events: auto;
+      visibility: visible;
+    }
+
+    /* Tap zones for mobile — back/forward thirds like Stories.
+       Transparent, no visible UI, don't block the overlay. */
+    .tapzones {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      z-index: 2147482000;
+      pointer-events: none;
+    }
+    .tapzone {
+      flex: 1;
+      pointer-events: auto;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* Only activate tap zones on coarse pointers (touch devices). */
+    @media (hover: hover) and (pointer: fine) {
+      .tapzones { display: none; }
+    }
+
+    .overlay {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translate(-50%, 6px) scale(0.92);
+      filter: blur(6px);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px;
+      background: #000;
+      color: #fff;
+      border-radius: 999px;
+      font-size: 12px;
+      font-feature-settings: "tnum" 1;
+      letter-spacing: 0.01em;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 260ms ease, transform 260ms cubic-bezier(.2,.8,.2,1), filter 260ms ease;
+      transform-origin: center bottom;
+      z-index: 2147483000;
+      user-select: none;
+    }
+    .overlay[data-visible] {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate(-50%, 0) scale(1);
+      filter: blur(0);
+    }
+
+    .btn {
+      appearance: none;
+      -webkit-appearance: none;
+      background: transparent;
+      border: 0;
+      margin: 0;
+      padding: 0;
+      color: inherit;
+      font: inherit;
+      cursor: default;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 28px;
+      min-width: 28px;
+      border-radius: 999px;
+      color: rgba(255,255,255,0.72);
+      transition: background 140ms ease, color 140ms ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .btn:active { background: rgba(255,255,255,0.18); }
+    .btn:focus { outline: none; }
+    .btn:focus-visible { outline: none; }
+    .btn::-moz-focus-inner { border: 0; }
+    .btn svg { width: 14px; height: 14px; display: block; }
+    .btn.reset {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      padding: 0 10px 0 12px;
+      gap: 6px;
+      color: rgba(255,255,255,0.72);
+    }
+    .btn.reset .kbd {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 4px;
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 10px;
+      line-height: 1;
+      color: rgba(255,255,255,0.88);
+      background: rgba(255,255,255,0.12);
+      border-radius: 4px;
+    }
+
+    .count {
+      font-variant-numeric: tabular-nums;
+      color: #fff;
+      font-weight: 500;
+      padding: 0 8px;
+      min-width: 42px;
+      text-align: center;
+      font-size: 12px;
+    }
+    .count .sep { color: rgba(255,255,255,0.45); margin: 0 3px; font-weight: 400; }
+    .count .total { color: rgba(255,255,255,0.55); }
+
+    .divider {
+      width: 1px;
+      height: 14px;
+      background: rgba(255,255,255,0.18);
+      margin: 0 2px;
+    }
+
+    /* ── Print: one page per slide, no chrome ────────────────────────────
+       The screen layout stacks every slide at inset:0 inside a scaled
+       canvas; for print we want them in document flow at the authored
+       design size so the browser paginates one slide per sheet. The
+       @page size is set from the width/height attributes via the inline
+       <style id="deck-stage-print-page"> that connectedCallback injects
+       into <head> (the @page at-rule has no effect inside shadow DOM). */
+    @media print {
+      :host {
+        position: static;
+        inset: auto;
+        background: none;
+        overflow: visible;
+        color: inherit;
+      }
+      .stage { position: static; display: block; }
+      .canvas {
+        transform: none !important;
+        width: auto !important;
+        height: auto !important;
+        background: none;
+        will-change: auto;
+      }
+      ::slotted(*) {
+        position: relative !important;
+        inset: auto !important;
+        width: var(--deck-design-w) !important;
+        height: var(--deck-design-h) !important;
+        box-sizing: border-box !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto;
+        break-after: page;
+        page-break-after: always;
+        break-inside: avoid;
+        overflow: hidden;
+      }
+      ::slotted(*:last-child) {
+        break-after: auto;
+        page-break-after: auto;
+      }
+      .overlay, .tapzones { display: none !important; }
+    }
+  `;
+
+  class DeckStage extends HTMLElement {
+    static get observedAttributes() { return ['width', 'height', 'noscale']; }
+
+    constructor() {
+      super();
+      this._root = this.attachShadow({ mode: 'open' });
+      this._index = 0;
+      this._slides = [];
+      this._notes = [];
+      this._hideTimer = null;
+      this._mouseIdleTimer = null;
+      this._storageKey = STORAGE_PREFIX + (location.pathname || '/');
+
+      this._onKey = this._onKey.bind(this);
+      this._onResize = this._onResize.bind(this);
+      this._onSlotChange = this._onSlotChange.bind(this);
+      this._onMouseMove = this._onMouseMove.bind(this);
+      this._onTapBack = this._onTapBack.bind(this);
+      this._onTapForward = this._onTapForward.bind(this);
+    }
+
+    get designWidth() {
+      return parseInt(this.getAttribute('width'), 10) || DESIGN_W_DEFAULT;
+    }
+    get designHeight() {
+      return parseInt(this.getAttribute('height'), 10) || DESIGN_H_DEFAULT;
+    }
+
+    connectedCallback() {
+      this._render();
+      this._loadNotes();
+      this._syncPrintPageRule();
+      window.addEventListener('keydown', this._onKey);
+      window.addEventListener('resize', this._onResize);
+      window.addEventListener('mousemove', this._onMouseMove, { passive: true });
+      // Initial collection + layout happens via slotchange, which fires on mount.
+    }
+
+    disconnectedCallback() {
+      window.removeEventListener('keydown', this._onKey);
+      window.removeEventListener('resize', this._onResize);
+      window.removeEventListener('mousemove', this._onMouseMove);
+      if (this._hideTimer) clearTimeout(this._hideTimer);
+      if (this._mouseIdleTimer) clearTimeout(this._mouseIdleTimer);
+    }
+
+    attributeChangedCallback() {
+      if (this._canvas) {
+        this._canvas.style.width = this.designWidth + 'px';
+        this._canvas.style.height = this.designHeight + 'px';
+        this._canvas.style.setProperty('--deck-design-w', this.designWidth + 'px');
+        this._canvas.style.setProperty('--deck-design-h', this.designHeight + 'px');
+        this._fit();
+        this._syncPrintPageRule();
+      }
+    }
+
+    _render() {
+      const style = document.createElement('style');
+      style.textContent = stylesheet;
+
+      const stage = document.createElement('div');
+      stage.className = 'stage';
+
+      const canvas = document.createElement('div');
+      canvas.className = 'canvas';
+      canvas.style.width = this.designWidth + 'px';
+      canvas.style.height = this.designHeight + 'px';
+      canvas.style.setProperty('--deck-design-w', this.designWidth + 'px');
+      canvas.style.setProperty('--deck-design-h', this.designHeight + 'px');
+
+      const slot = document.createElement('slot');
+      slot.addEventListener('slotchange', this._onSlotChange);
+      canvas.appendChild(slot);
+      stage.appendChild(canvas);
+
+      // Tap zones (mobile): left third = back, right third = forward.
+      const tapzones = document.createElement('div');
+      tapzones.className = 'tapzones export-hidden';
+      tapzones.setAttribute('aria-hidden', 'true');
+      const tzBack = document.createElement('div');
+      tzBack.className = 'tapzone tapzone--back';
+      const tzMid = document.createElement('div');
+      tzMid.className = 'tapzone tapzone--mid';
+      tzMid.style.pointerEvents = 'none';
+      const tzFwd = document.createElement('div');
+      tzFwd.className = 'tapzone tapzone--fwd';
+      tzBack.addEventListener('click', this._onTapBack);
+      tzFwd.addEventListener('click', this._onTapForward);
+      tapzones.append(tzBack, tzMid, tzFwd);
+
+      // Overlay: compact, solid black, with clickable controls.
+      const overlay = document.createElement('div');
+      overlay.className = 'overlay export-hidden';
+      overlay.setAttribute('role', 'toolbar');
+      overlay.setAttribute('aria-label', 'Deck controls');
+      overlay.innerHTML = `
+        <button class="btn prev" type="button" aria-label="Previous slide" title="Previous (←)">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3L5 8l5 5"/></svg>
+        </button>
+        <span class="count" aria-live="polite"><span class="current">1</span><span class="sep">/</span><span class="total">1</span></span>
+        <button class="btn next" type="button" aria-label="Next slide" title="Next (→)">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3l5 5-5 5"/></svg>
+        </button>
+        <span class="divider"></span>
+        <button class="btn reset" type="button" aria-label="Reset to first slide" title="Reset (R)">Reset<span class="kbd">R</span></button>
+      `;
+
+      overlay.querySelector('.prev').addEventListener('click', () => this._go(this._index - 1, 'click'));
+      overlay.querySelector('.next').addEventListener('click', () => this._go(this._index + 1, 'click'));
+      overlay.querySelector('.reset').addEventListener('click', () => this._go(0, 'click'));
+
+      this._root.append(style, stage, tapzones, overlay);
+      this._canvas = canvas;
+      this._slot = slot;
+      this._overlay = overlay;
+      this._countEl = overlay.querySelector('.current');
+      this._totalEl = overlay.querySelector('.total');
+    }
+
+    /** @page must live in the document stylesheet — it's a no-op inside
+     *  shadow DOM. Inject/update a single <head> style tag so the print
+     *  sheet matches the design size and Save-as-PDF yields one slide per
+     *  page with no margins. */
+    _syncPrintPageRule() {
+      const id = 'deck-stage-print-page';
+      let tag = document.getElementById(id);
+      if (!tag) {
+        tag = document.createElement('style');
+        tag.id = id;
+        document.head.appendChild(tag);
+      }
+      tag.textContent =
+        '@page { size: ' + this.designWidth + 'px ' + this.designHeight + 'px; margin: 0; } ' +
+        '@media print { html, body { margin: 0 !important; padding: 0 !important; background: none !important; overflow: visible !important; height: auto !important; } ' +
+        '* { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }';
+    }
+
+    _onSlotChange() {
+      this._collectSlides();
+      this._restoreIndex();
+      this._applyIndex({ showOverlay: false, broadcast: true, reason: 'init' });
+      this._fit();
+    }
+
+    _collectSlides() {
+      const assigned = this._slot.assignedElements({ flatten: true });
+      this._slides = assigned.filter((el) => {
+        // Skip template/style/script nodes even if someone slots them.
+        const tag = el.tagName;
+        return tag !== 'TEMPLATE' && tag !== 'SCRIPT' && tag !== 'STYLE';
+      });
+
+      this._slides.forEach((slide, i) => {
+        const n = i + 1;
+        // Determine a label for comment flow: prefer explicit data-label,
+        // then an existing data-screen-label, then first heading, else "Slide".
+        let label = slide.getAttribute('data-label');
+        if (!label) {
+          const existing = slide.getAttribute('data-screen-label');
+          if (existing) {
+            // Strip any leading number the author may have included.
+            label = existing.replace(/^\s*\d+\s*/, '').trim() || existing;
+          }
+        }
+        if (!label) {
+          const h = slide.querySelector('h1, h2, h3, [data-title]');
+          if (h) label = (h.textContent || '').trim().slice(0, 40);
+        }
+        if (!label) label = 'Slide';
+        slide.setAttribute('data-screen-label', `${pad2(n)} ${label}`);
+
+        // Validation attribute for comment flow / auto-checks.
+        if (!slide.hasAttribute('data-om-validate')) {
+          slide.setAttribute('data-om-validate', VALIDATE_ATTR);
+        }
+
+        slide.setAttribute('data-deck-slide', String(i));
+      });
+
+      if (this._totalEl) this._totalEl.textContent = String(this._slides.length || 1);
+      if (this._index >= this._slides.length) this._index = Math.max(0, this._slides.length - 1);
+    }
+
+    _loadNotes() {
+      const tag = document.getElementById('speaker-notes');
+      if (!tag) { this._notes = []; return; }
+      try {
+        const parsed = JSON.parse(tag.textContent || '[]');
+        if (Array.isArray(parsed)) this._notes = parsed;
+      } catch (e) {
+        console.warn('[deck-stage] Failed to parse #speaker-notes JSON:', e);
+        this._notes = [];
+      }
+    }
+
+    _restoreIndex() {
+      try {
+        const raw = localStorage.getItem(this._storageKey);
+        if (raw != null) {
+          const n = parseInt(raw, 10);
+          if (Number.isFinite(n) && n >= 0 && n < this._slides.length) {
+            this._index = n;
+          }
+        }
+      } catch (e) { /* ignore */ }
+    }
+
+    _persistIndex() {
+      try { localStorage.setItem(this._storageKey, String(this._index)); }
+      catch (e) { /* ignore */ }
+    }
+
+    _applyIndex({ showOverlay = true, broadcast = true, reason = 'init' } = {}) {
+      if (!this._slides.length) return;
+      const prev = this._prevIndex == null ? -1 : this._prevIndex;
+      const curr = this._index;
+      this._slides.forEach((s, i) => {
+        if (i === curr) s.setAttribute('data-deck-active', '');
+        else s.removeAttribute('data-deck-active');
+      });
+      if (this._countEl) this._countEl.textContent = String(curr + 1);
+      this._persistIndex();
+
+      if (broadcast) {
+        // (1) Legacy: host-window postMessage for speaker-notes renderers.
+        try { window.postMessage({ slideIndexChanged: curr }, '*'); } catch (e) {}
+
+        // (2) In-page CustomEvent on the <deck-stage> element itself.
+        //     Bubbles and composes out of shadow DOM so slide code can listen:
+        //       document.querySelector('deck-stage').addEventListener('slidechange', e => {
+        //         e.detail.index, e.detail.previousIndex, e.detail.total, e.detail.slide, e.detail.reason
+        //       });
+        const detail = {
+          index: curr,
+          previousIndex: prev,
+          total: this._slides.length,
+          slide: this._slides[curr] || null,
+          previousSlide: prev >= 0 ? (this._slides[prev] || null) : null,
+          reason: reason, // 'init' | 'keyboard' | 'click' | 'tap' | 'api'
+        };
+        this.dispatchEvent(new CustomEvent('slidechange', {
+          detail,
+          bubbles: true,
+          composed: true,
+        }));
+      }
+
+      this._prevIndex = curr;
+      if (showOverlay) this._flashOverlay();
+    }
+
+    _flashOverlay() {
+      if (!this._overlay) return;
+      this._overlay.setAttribute('data-visible', '');
+      if (this._hideTimer) clearTimeout(this._hideTimer);
+      this._hideTimer = setTimeout(() => {
+        this._overlay.removeAttribute('data-visible');
+      }, OVERLAY_HIDE_MS);
+    }
+
+    _fit() {
+      if (!this._canvas) return;
+      // PPTX export sets noscale so the DOM capture sees authored-size
+      // geometry — the scaled canvas is in shadow DOM, so the exporter's
+      // resetTransformSelector can't reach .canvas.style.transform directly.
+      if (this.hasAttribute('noscale')) {
+        this._canvas.style.transform = 'none';
+        return;
+      }
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const s = Math.min(vw / this.designWidth, vh / this.designHeight);
+      this._canvas.style.transform = `scale(${s})`;
+    }
+
+    _onResize() { this._fit(); }
+
+    _onMouseMove() {
+      // Keep overlay visible while mouse moves; hide after idle.
+      this._flashOverlay();
+    }
+
+    _onTapBack(e) {
+      e.preventDefault();
+      this._go(this._index - 1, 'tap');
+    }
+
+    _onTapForward(e) {
+      e.preventDefault();
+      this._go(this._index + 1, 'tap');
+    }
+
+    _onKey(e) {
+      // Ignore when the user is typing.
+      const t = e.target;
+      if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+      const key = e.key;
+      let handled = true;
+
+      if (key === 'ArrowRight' || key === 'PageDown' || key === ' ' || key === 'Spacebar') {
+        this._go(this._index + 1, 'keyboard');
+      } else if (key === 'ArrowLeft' || key === 'PageUp') {
+        this._go(this._index - 1, 'keyboard');
+      } else if (key === 'Home') {
+        this._go(0, 'keyboard');
+      } else if (key === 'End') {
+        this._go(this._slides.length - 1, 'keyboard');
+      } else if (key === 'r' || key === 'R') {
+        this._go(0, 'keyboard');
+      } else if (/^[0-9]$/.test(key)) {
+        // 1..9 jump to that slide; 0 jumps to 10.
+        const n = key === '0' ? 9 : parseInt(key, 10) - 1;
+        if (n < this._slides.length) this._go(n, 'keyboard');
+      } else {
+        handled = false;
+      }
+
+      if (handled) {
+        e.preventDefault();
+        this._flashOverlay();
+      }
+    }
+
+    _go(i, reason = 'api') {
+      if (!this._slides.length) return;
+      const clamped = Math.max(0, Math.min(this._slides.length - 1, i));
+      if (clamped === this._index) {
+        this._flashOverlay();
+        return;
+      }
+      this._index = clamped;
+      this._applyIndex({ showOverlay: true, broadcast: true, reason });
+    }
+
+    // Public API ------------------------------------------------------------
+
+    /** Current slide index (0-based). */
+    get index() { return this._index; }
+    /** Total slide count. */
+    get length() { return this._slides.length; }
+    /** Programmatically navigate. */
+    goTo(i) { this._go(i, 'api'); }
+    next() { this._go(this._index + 1, 'api'); }
+    prev() { this._go(this._index - 1, 'api'); }
+    reset() { this._go(0, 'api'); }
+  }
+
+  if (!customElements.get('deck-stage')) {
+    customElements.define('deck-stage', DeckStage);
+  }
+})();
+
+</script>
+<script>
+  // Diagnostic: visible status pill in the corner so blank-screen ≠ silent.
+  (function() {
+    const pill = document.createElement('div');
+    pill.style.cssText = 'position:fixed;top:8px;left:8px;z-index:99999;padding:6px 10px;background:#000;color:#0f0;font:12px/1 ui-monospace,monospace;border:1px solid #0f0;border-radius:4px;opacity:0.5';
+    pill.textContent = 'deck: loading…';
+    document.body.appendChild(pill);
+    let tries = 0;
+    const check = () => {
+      tries++;
+      if (customElements.get('deck-stage')) {
+        pill.textContent = 'deck: ok (' + document.querySelectorAll('deck-stage > section').length + ' slides)';
+        pill.style.color = '#0f0';
+        setTimeout(() => pill.remove(), 1500);
+      } else if (tries > 40) {
+        pill.textContent = 'deck: FAILED — deck-stage.js did not load';
+        pill.style.color = '#f55';
+        pill.style.borderColor = '#f55';
+        pill.style.opacity = '1';
+        // Force-show slide 1 so screen isn't black.
+        const ds = document.querySelector('deck-stage');
+        if (ds) {
+          ds.style.cssText = 'display:block;position:relative;width:100vw;height:100vh;overflow:hidden;';
+          const first = ds.querySelector('section');
+          if (first) first.setAttribute('style', 'position:absolute;inset:0;display:flex;flex-direction:column;');
+        }
+      } else {
+        setTimeout(check, 100);
+      }
+    };
+    check();
+  })();
+</script>
+</body>
+</html>
