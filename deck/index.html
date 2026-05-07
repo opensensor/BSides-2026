@@ -873,57 +873,7 @@ code.inline {
     </div>
   </section>
 
-  <!-- ========================= SLIDE 6 — USB ========================= -->
-  <section class="slide" data-label="USB Extraction">
-    <div class="chrome-top">
-      <span><span class="prompt">$</span> dmesg | grep ingenic</span>
-      <span class="meta">§ 02 · extraction</span>
-    </div>
-    <div class="body">
-      <div class="eyebrow">No clip required</div>
-      <h2 class="h-title">USB extraction &mdash; when devices cooperate</h2>
-      <div class="h-sub">// many SoCs have a built-in boot / recovery mode; it's usually a gift</div>
-
-      <div class="row2" style="margin-top:56px; flex:1;">
-        <div style="display:flex; flex-direction:column; gap:22px;">
-          <div class="card">
-            <div class="card-label">Mechanism</div>
-            <h3 class="card-title" style="font-size:32px">Short a pin. Plug in USB.</h3>
-            <p>Boot ROM drops into a recovery protocol. No physical clip, no desoldering, no scorched PCB.</p>
-          </div>
-          <div class="card accent-blue">
-            <div class="card-label">Ingenic</div>
-            <h3 class="card-title" style="font-size:32px">The <span class="mono-blue">cloner</span> protocol</h3>
-            <p>Read flash, write flash, execute code &mdash; all over USB. Intended for factory reflash. We have other plans.</p>
-          </div>
-          <div class="pill green"><span class="dot"></span>Foreshadowing &mdash; this same protocol may be able to give us additional information.</div>
-        </div>
-
-        <div class="term" style="align-self:stretch;">
-          <div class="term-head">
-            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-            <span class="title">usb · cloner</span>
-          </div>
-          <div class="term-body"><span class="cmt"># short BOOT_SEL to GND, plug USB</span>
-<span class="prompt">$</span> <span class="cmd">lsusb | grep Ingenic</span>
-<span class="out">Bus 001 Device 042: </span><span class="hi">ID a108:1000 Ingenic T41</span>
-
-<span class="prompt">$</span> <span class="cmd">cloner --read 0x0 0x800000 flash.bin</span>
-<span class="out">Reading    [====================] 100%</span>
-<span class="out">Wrote 8388608 bytes to flash.bin</span>
-
-<span class="prompt">$</span> <span class="cmd">file flash.bin</span>
-<span class="out">flash.bin: </span><span class="hi">u-boot + kernel + rootfs</span></div>
-        </div>
-      </div>
-    </div>
-    <div class="chrome-bot">
-      <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page"><span style="color:var(--green)">06</span><span class="sep">/</span>21</span>
-    </div>
-  </section>
-
-  <!-- ========================= SLIDE 7 — Ingenic case study ========================= -->
+  <!-- ========================= SLIDE 6 — Ingenic case study ========================= -->
   <section class="slide" data-label="Ingenic Case Study">
     <div class="chrome-top">
       <span><span class="prompt">$</span> cat /proc/cpuinfo</span>
@@ -973,7 +923,171 @@ code.inline {
     </div>
     <div class="chrome-bot">
       <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page"><span style="color:var(--green)">07</span><span class="sep">/</span>21</span>
+      <span class="page">·</span>
+    </div>
+  </section>
+
+  <!-- ========================= SLIDE 7 — USB ========================= -->
+  <section class="slide" data-label="USB Extraction">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> dmesg | grep ingenic</span>
+      <span class="meta">§ 02 · extraction</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">No clip required</div>
+      <h2 class="h-title">USB extraction &mdash; when devices cooperate</h2>
+      <div class="h-sub">// some SoCs have a built-in boot / recovery mode; it's usually a gift</div>
+
+      <div class="row2" style="margin-top:56px; flex:1;">
+        <div style="display:flex; flex-direction:column; gap:22px;">
+          <div class="card">
+            <div class="card-label">Mechanism</div>
+            <h3 class="card-title" style="font-size:32px">Short a pin. Plug in USB.</h3>
+            <p>Boot ROM drops into a recovery protocol. No physical clip, no desoldering, no scorched PCB.</p>
+          </div>
+          <div class="card accent-blue">
+            <div class="card-label">Ingenic</div>
+            <h3 class="card-title" style="font-size:32px">The <span class="mono-blue">cloner</span> protocol</h3>
+            <p>Read flash, write flash, execute code &mdash; all over USB. Intended for factory reflash. We have other plans.</p>
+          </div>
+          <div class="pill green"><span class="dot"></span>Foreshadowing &mdash; this same protocol may be able to give us additional information.</div>
+        </div>
+
+        <div class="term" style="align-self:stretch;">
+          <div class="term-head">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span class="title">usb · cloner</span>
+          </div>
+          <div class="term-body"><span class="cmt"># short BOOT_SEL to GND, plug USB</span>
+<span class="prompt">$</span> <span class="cmd">lsusb | grep Ingenic</span>
+<span class="out">Bus 001 Device 042: </span><span class="hi">ID a108:1000 Ingenic T41</span>
+
+<span class="prompt">$</span> <span class="cmd">cloner --read 0x0 0x800000 flash.bin</span>
+<span class="out">Reading    [====================] 100%</span>
+<span class="out">Wrote 8388608 bytes to flash.bin</span>
+
+<span class="prompt">$</span> <span class="cmd">file flash.bin</span>
+<span class="out">flash.bin: </span><span class="hi">u-boot + kernel + rootfs</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page">·</span>
+    </div>
+  </section>
+
+  <!-- ========================= NEW · Binwalk extraction ========================= -->
+  <section class="slide" data-label="Binwalk Extraction">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> binwalk -Me firmware.bin</span>
+      <span class="meta">§ 02 · inside the dump</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">Chapter 02 · Inside the dump</div>
+      <h2 class="h-title">binwalk &mdash; what's inside that .bin?</h2>
+      <div class="h-sub">// a flash dump is a stack of headers if you know what to look for</div>
+
+      <div style="margin-top:36px; display:grid; grid-template-columns: 1.4fr 1fr; gap:28px; flex:1; min-height:0;">
+        <div class="term" style="display:flex; flex-direction:column; min-height:0;">
+          <div class="term-head">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span class="title">terminal &middot; binwalk</span>
+          </div>
+          <div class="term-body" style="font-size:18px; line-height:1.55; flex:1;"><span class="prompt">$</span> <span class="cmd">binwalk firmware.bin</span>
+<span class="out">DECIMAL    HEX        DESCRIPTION
+---------  ---------  ----------------------------------------</span>
+<span class="hi">0          0x0        uImage header, image size: 1572864</span>
+<span class="out">64         0x40       LZMA compressed data, lc:3, pb:2</span>
+<span class="hi">1572864    0x180000   Squashfs filesystem, version 4.0, 14 MB</span>
+<span class="out">15728640   0xF00000   JFFS2 filesystem, big endian (config)</span>
+<span class="out">16252928   0xF80000   U-Boot environment variables</span>
+
+<span class="prompt">$</span> <span class="cmd">binwalk -Me firmware.bin</span>
+<span class="out">Extracting matched signatures, recursively...</span>
+<span class="hi">_firmware.bin.extracted/
+  &boxv;&boxh;&boxh; 40                     # uImage payload (LZMA)
+  &boxv;&boxh;&boxh; 180000.squashfs        # the rootfs
+  &boxv;&boxh;&boxh; squashfs-root/         # mounted tree
+  &boxv;&boxh;&boxh; F00000.jffs2           # config volume
+  &boxvr;&boxh;&boxh; F80000.env             # u-boot env</span></div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:14px;">
+          <div class="card accent-amber" style="padding:18px 24px;">
+            <div class="card-label">Pass 01</div>
+            <h3 class="card-title" style="font-size:24px; margin-bottom:6px;">Identify</h3>
+            <p style="font-size:18px; margin:0;">Magic-byte signatures &mdash; uImage, Squashfs, JFFS2, gzip, LZMA, DTB, certificates.</p>
+          </div>
+          <div class="card accent-blue" style="padding:18px 24px;">
+            <div class="card-label">Pass 02</div>
+            <h3 class="card-title" style="font-size:24px; margin-bottom:6px;">Carve</h3>
+            <p style="font-size:18px; margin:0;"><code class="inline">-M -e</code> recursively extracts every match. Mount the squashfs and you're <em>inside</em> the device.</p>
+          </div>
+          <div class="card accent-green" style="padding:18px 24px;">
+            <div class="card-label">Pass 03</div>
+            <h3 class="card-title" style="font-size:24px; margin-bottom:6px;">Browse</h3>
+            <p style="font-size:18px; margin:0;"><code class="inline">/etc</code>, <code class="inline">/usr/bin</code>, kernel modules, init scripts &mdash; the whole userland tree.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page">&middot;</span>
+    </div>
+  </section>
+
+  <!-- ========================= NEW · Interesting artifacts ========================= -->
+  <section class="slide" data-label="Firmware Artifacts">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> grep -r 'BEGIN.*PRIVATE' squashfs-root/</span>
+      <span class="meta">§ 02 · easy wins</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">What to look for once you've extracted</div>
+      <h2 class="h-title">Interesting artifacts &mdash; the easy wins</h2>
+      <div class="h-sub">// the things vendors meant to remove and forgot</div>
+
+      <div class="row4" style="margin-top:36px;">
+        <div class="card accent-green" style="padding:20px 22px;">
+          <div class="card-label">01 &middot; Strings</div>
+          <h3 class="card-title" style="font-size:24px; margin-bottom:6px;">Hardcoded URLs</h3>
+          <p style="font-size:18px; margin:0;">Cloud endpoints, MQTT brokers, S3 buckets, internal dev domains. <code class="inline">strings</code> + <code class="inline">grep</code>.</p>
+        </div>
+        <div class="card accent-coral" style="padding:20px 22px;">
+          <div class="card-label">02 &middot; Keys &amp; certs</div>
+          <h3 class="card-title" style="font-size:24px; margin-bottom:6px;">Forgotten secrets</h3>
+          <p style="font-size:18px; margin:0;">Private keys checked in, debug-CA chains, OEM signing keys reused across the fleet.</p>
+        </div>
+        <div class="card accent-amber" style="padding:20px 22px;">
+          <div class="card-label">03 &middot; Debug hooks</div>
+          <h3 class="card-title" style="font-size:24px; margin-bottom:6px;">Hidden interfaces</h3>
+          <p style="font-size:18px; margin:0;">Telnet daemons, dropbear keys, factory test menus, shells gated by an env flag.</p>
+        </div>
+        <div class="card accent-blue" style="padding:20px 22px;">
+          <div class="card-label">04 &middot; Configs</div>
+          <h3 class="card-title" style="font-size:24px; margin-bottom:6px;">Build &amp; identity</h3>
+          <p style="font-size:18px; margin:0;">U-Boot env, default creds, build IDs revealing kernel + SoC + sensor exactly.</p>
+        </div>
+      </div>
+
+      <div class="term" style="margin-top:28px;">
+        <div class="term-head">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="title">terminal &middot; the easy grep</span>
+        </div>
+        <div class="term-body" style="font-size:20px; line-height:1.55;"><span class="prompt">$</span> <span class="cmd">strings -n 12 squashfs-root/usr/bin/iCamera | grep -E 'http|mqtt|api'</span>
+<span class="hi">https://api.&lt;vendor&gt;.com/v1/devices/{id}/heartbeat</span>
+<span class="hi">mqtt://broker.&lt;vendor&gt;.cloud:8883</span>
+
+<span class="prompt">$</span> <span class="cmd">find squashfs-root -name '*.pem' -o -name '*.key'</span>
+<span class="hi">squashfs-root/etc/ssl/private/factory.key</span>      <span class="cmt"># oof</span></div>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page">&middot;</span>
     </div>
   </section>
 
@@ -1017,6 +1131,451 @@ code.inline {
     <div class="chrome-bot">
       <span class="meta">bsides_maine_2026 // matt davis</span>
       <span class="page"><span style="color:var(--green)">08</span><span class="sep">/</span>21</span>
+    </div>
+  </section>
+
+  <!-- ========================= NEW · ioctl primer (web API analogy) ========================= -->
+  <section class="slide" data-label="ioctl Primer">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> man 2 ioctl</span>
+      <span class="meta">§ 02 &middot; the kernel's API</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">If you've shipped a REST API, you already get this</div>
+      <h2 class="h-title">ioctl &mdash; the kernel's REST endpoints</h2>
+      <div class="h-sub">// every driver exposes its own private API surface</div>
+
+      <div class="tbl" style="margin-top:32px; font-size:20px;">
+        <div class="row head" style="grid-template-columns: 1.2fr 1.4fr 1.4fr;">
+          <div>Concept</div><div>Web API</div><div>ioctl</div>
+        </div>
+        <div class="row" style="grid-template-columns: 1.2fr 1.4fr 1.4fr;">
+          <div class="mono-green" style="font-weight:600">endpoint</div>
+          <div><code class="inline">POST /v1/foo</code></div>
+          <div><code class="inline">_IOWR('F', 0x12, struct foo)</code></div>
+        </div>
+        <div class="row alt" style="grid-template-columns: 1.2fr 1.4fr 1.4fr;">
+          <div class="mono-green" style="font-weight:600">request body</div>
+          <div>JSON in HTTP body</div>
+          <div><code class="inline">struct foo *</code> from userspace</div>
+        </div>
+        <div class="row" style="grid-template-columns: 1.2fr 1.4fr 1.4fr;">
+          <div class="mono-green" style="font-weight:600">response</div>
+          <div>JSON returned</div>
+          <div>same struct, filled by kernel (<code class="inline">_IOR / _IOWR</code>)</div>
+        </div>
+        <div class="row alt" style="grid-template-columns: 1.2fr 1.4fr 1.4fr;">
+          <div class="mono-green" style="font-weight:600">status</div>
+          <div>HTTP code (200, 4xx, 5xx)</div>
+          <div>return value (0 ok, <code class="inline">-EXXX</code> errno)</div>
+        </div>
+        <div class="row" style="grid-template-columns: 1.2fr 1.4fr 1.4fr;">
+          <div class="mono-green" style="font-weight:600">session / auth</div>
+          <div>cookie, JWT, API key</div>
+          <div>file descriptor from <code class="inline">open("/dev/foo")</code></div>
+        </div>
+        <div class="row alt" style="grid-template-columns: 1.2fr 1.4fr 1.4fr;">
+          <div class="mono-green" style="font-weight:600">contract</div>
+          <div>OpenAPI spec</div>
+          <div><code class="inline">&lt;linux/foo.h&gt;</code> &mdash; if you're lucky</div>
+        </div>
+      </div>
+
+      <div class="push" style="margin-top:28px; padding:18px 24px; background:var(--panel); border:1px dashed var(--border-2); border-radius:10px; font-family:var(--font-mono); font-size:20px; color:var(--text-dim);">
+        <span style="color:var(--amber)">!</span> Same shape, different layer. The hard part: when there's <span class="mono-amber">no header file</span>, the API is <em>only</em> in the binary.
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page">&middot;</span>
+    </div>
+  </section>
+
+  <!-- ========================= NEW · ioctl anatomy ========================= -->
+  <section class="slide" data-label="ioctl Anatomy">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> vim drivers/foo/foo_ioctl.c</span>
+      <span class="meta">§ 02 &middot; the kernel's API</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">Anatomy</div>
+      <h2 class="h-title">ioctl, deconstructed</h2>
+      <div class="h-sub">// _IOR / _IOW + struct + dispatch in fops-&gt;unlocked_ioctl</div>
+
+      <div style="margin-top:28px; display:grid; grid-template-columns: 1.5fr 1fr; gap:28px; flex:1; min-height:0;">
+        <div class="term">
+          <div class="term-head">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span class="title">drivers/tx-isp/tx-isp.c</span>
+          </div>
+          <div class="term-body" style="font-size:18px; line-height:1.6;"><span class="cmt">/* the contract &mdash; what userspace can ask for */</span>
+<span class="kw">#define</span> TX_ISP_MAGIC          'I'
+<span class="kw">#define</span> TX_ISP_GET_FRAME      <span class="hi">_IOR</span> (TX_ISP_MAGIC, 0x01, <span class="kw">struct</span> isp_frame)
+<span class="kw">#define</span> TX_ISP_SET_TUNING     <span class="hi">_IOW</span> (TX_ISP_MAGIC, 0x02, <span class="kw">struct</span> isp_tune)
+<span class="kw">#define</span> TX_ISP_QUERY_STATS    <span class="hi">_IOWR</span>(TX_ISP_MAGIC, 0x03, <span class="kw">struct</span> isp_stats)
+
+<span class="cmt">/* the dispatch &mdash; kernel side */</span>
+<span class="kw">static long</span> <span class="hi">tx_isp_ioctl</span>(<span class="kw">struct</span> file *f, <span class="kw">unsigned int</span> cmd, <span class="kw">unsigned long</span> arg) {
+    <span class="kw">switch</span> (cmd) {
+        <span class="kw">case</span> TX_ISP_GET_FRAME:    <span class="kw">return</span> isp_get_frame(f, arg);
+        <span class="kw">case</span> TX_ISP_SET_TUNING:   <span class="kw">return</span> isp_set_tuning(f, arg);
+        <span class="kw">case</span> TX_ISP_QUERY_STATS:  <span class="kw">return</span> isp_query_stats(f, arg);
+    }
+    <span class="kw">return</span> -ENOTTY;
+}
+
+<span class="kw">static const struct</span> file_operations tx_isp_fops = {
+    .owner          = THIS_MODULE,
+    .<span class="hi">unlocked_ioctl</span> = tx_isp_ioctl,   <span class="cmt">// THE entry point</span>
+    .open           = tx_isp_open,
+};</div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div class="card accent-blue" style="padding:18px 22px;">
+            <div class="card-label">01 &middot; Macro</div>
+            <p style="font-size:19px; margin:0;"><code class="inline">_IOR / _IOW / _IOWR</code> packs <em>direction</em>, <em>magic</em>, <em>nr</em>, and <em>size</em> into a single 32-bit cmd.</p>
+          </div>
+          <div class="card accent-amber" style="padding:18px 22px;">
+            <div class="card-label">02 &middot; Contract</div>
+            <p style="font-size:19px; margin:0;">The <code class="inline">struct</code> is the wire format. Kernel and user must agree byte-for-byte.</p>
+          </div>
+          <div class="card accent-green" style="padding:18px 22px;">
+            <div class="card-label">03 &middot; Dispatch</div>
+            <p style="font-size:19px; margin:0;">A switch in <code class="inline">unlocked_ioctl</code>. Each case is one endpoint &mdash; find this and you've found the whole API.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page">&middot;</span>
+    </div>
+  </section>
+
+  <!-- ========================= NEW · open-tx-isp intro ========================= -->
+  <section class="slide" data-label="open-tx-isp">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> git clone https://github.com/opensensor/open-tx-isp</span>
+      <span class="meta">§ 02 &middot; reclaim the ISP</span>
+    </div>
+    <div class="body">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:32px;">
+        <div>
+          <div class="eyebrow">Chapter 02.5 &middot; Replacing the closed blob</div>
+          <h2 class="h-title">open-tx-isp &mdash; clean-room ISP driver</h2>
+          <div class="h-sub">// the only way out of the 3.10 / 4.4 trap is to replace the blob</div>
+        </div>
+        <div class="img-expand"
+             data-src="photos/ingenic_isp.webp"
+             data-caption="open-tx-isp mascot &mdash; investigating closed firmware, one ioctl at a time"
+             style="width:140px; height:140px; flex:0 0 auto; background:transparent; border-color:rgba(0,227,140,0.25);">
+          <img src="photos/ingenic_isp.webp" alt="open-tx-isp mascot — penguin detective with magnifying glass and IP camera" style="object-fit:contain;">
+        </div>
+      </div>
+
+      <div class="row2" style="margin-top:36px; flex:1; min-height:0;">
+        <div class="card accent-coral" style="padding:24px 28px;">
+          <div class="card-label">Why it has to exist</div>
+          <h3 class="card-title">The blob is the lock</h3>
+          <ul>
+            <li>Every Ingenic-based camera ships a closed <code class="inline">tx-isp.ko</code></li>
+            <li>Compiled against a specific kernel ABI &mdash; binary porting very challenging</li>
+            <li>No replacement &rArr; no kernel upgrades</li>
+            <li>A whole device class held hostage to one vendor module</li>
+          </ul>
+        </div>
+        <div class="card accent-green" style="padding:24px 28px;">
+          <div class="card-label">What we're building</div>
+          <h3 class="card-title">A modern, GPLv3-licensed driver</h3>
+          <ul>
+            <li>V4L2-shaped &mdash; standard userspace tooling works</li>
+            <li>Targets recent kernels (5.15+, 6.x WIP)</li>
+            <li>Covers T20 / T21 / T31 / T40 / T41 ISPs</li>
+            <li>Open governance, public review, no NDAs</li>
+          </ul>
+          <div class="links" style="margin-top:14px;">
+            <a>github.com/opensensor/open-tx-isp</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page">&middot;</span>
+    </div>
+  </section>
+
+  <!-- ========================= NEW · ISP pipeline ========================= -->
+  <section class="slide" data-label="ISP Pipeline">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> cat /proc/tx-isp/topology</span>
+      <span class="meta">§ 02 &middot; what the ISP does</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">What we're rebuilding</div>
+      <h2 class="h-title">The ISP pipeline</h2>
+      <div class="h-sub">// from raw Bayer to encoded video, in hardware</div>
+
+      <div class="flow" style="margin-top:48px;">
+        <div class="node" style="border-color: rgba(106,178,255,0.4)">
+          <div class="lbl" style="color:var(--blue)">Sensor</div>
+          <div class="val">MIPI / DVP</div>
+          <div class="dim mono" style="font-size:14px;">raw Bayer</div>
+        </div>
+        <div class="arrow">&rarr;</div>
+        <div class="node" style="border-color: rgba(245,165,36,0.4)">
+          <div class="lbl" style="color:var(--amber)">Front-end</div>
+          <div class="val">BLC &middot; LSC &middot; DPC</div>
+          <div class="dim mono" style="font-size:14px;">defect / shading correction</div>
+        </div>
+        <div class="arrow">&rarr;</div>
+        <div class="node" style="border-color: rgba(0,227,140,0.4)">
+          <div class="lbl" style="color:var(--green)">Demosaic</div>
+          <div class="val">AWB &middot; CCM</div>
+          <div class="dim mono" style="font-size:14px;">color reconstruction</div>
+        </div>
+        <div class="arrow">&rarr;</div>
+        <div class="node" style="border-color: rgba(214,122,255,0.4)">
+          <div class="lbl" style="color:var(--magenta)">Back-end</div>
+          <div class="val">Gamma &middot; NR &middot; sharpen</div>
+          <div class="dim mono" style="font-size:14px;">tone &amp; detail</div>
+        </div>
+        <div class="arrow">&rarr;</div>
+        <div class="node" style="border-color: rgba(255,106,92,0.4)">
+          <div class="lbl" style="color:var(--coral)">Out</div>
+          <div class="val">YUV / NV12</div>
+          <div class="dim mono" style="font-size:14px;">&rarr; encoder</div>
+        </div>
+      </div>
+
+      <div class="row3" style="margin-top:40px;">
+        <div class="card accent-blue" style="padding:20px 24px;">
+          <div class="card-label">Configured by</div>
+          <p style="font-size:20px; margin:6px 0 0;">Per-stage register banks &mdash; hundreds of writes per frame.</p>
+        </div>
+        <div class="card accent-amber" style="padding:20px 24px;">
+          <div class="card-label">Tuning binaries</div>
+          <p style="font-size:20px; margin:6px 0 0;">Per-sensor calibration blobs (gamma curves, CCMs, AE/AWB tables).</p>
+        </div>
+        <div class="card accent-green" style="padding:20px 24px;">
+          <div class="card-label">Surfaces via</div>
+          <p style="font-size:20px; margin:6px 0 0;"><code class="inline">/dev/tx-isp</code> + ~80 ioctls. <em>Most undocumented.</em></p>
+        </div>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page">&middot;</span>
+    </div>
+  </section>
+
+  <!-- ========================= NEW · open-tx-isp methodology ========================= -->
+  <section class="slide" data-label="open-tx-isp method">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> cat docs/methodology.md</span>
+      <span class="meta">§ 02 &middot; how</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">How we reverse it</div>
+      <h2 class="h-title">Methodology &mdash; trace, model, replace</h2>
+      <div class="h-sub">// tracing the running blob is more useful than reading it cold</div>
+
+      <div class="row4" style="margin-top:40px;">
+        <div class="card accent-blue" style="padding:22px 24px;">
+          <div class="card-label">01 &middot; Trace</div>
+          <h3 class="card-title" style="font-size:24px; margin-bottom:6px;">Watch it run</h3>
+          <p style="font-size:18px; margin:0;">kprobes / ftrace on <code class="inline">tx_isp_ioctl</code>; log every register write the blob makes during streaming.</p>
+        </div>
+        <div class="card accent-amber" style="padding:22px 24px;">
+          <div class="card-label">02 &middot; Model</div>
+          <h3 class="card-title" style="font-size:24px; margin-bottom:6px;">Derive the state machine</h3>
+          <p style="font-size:18px; margin:0;">Group writes by stage. Identify init vs per-frame vs tuning paths. Build a register map.</p>
+        </div>
+        <div class="card accent-green" style="padding:22px 24px;">
+          <div class="card-label">03 &middot; Diff</div>
+          <h3 class="card-title" style="font-size:24px; margin-bottom:6px;">Across SoCs</h3>
+          <p style="font-size:18px; margin:0;">T20 &rarr; T31 &rarr; T41. What stayed? What changed? Map the family tree of the silicon.</p>
+        </div>
+        <div class="card accent-coral" style="padding:22px 24px;">
+          <div class="card-label">04 &middot; Replace</div>
+          <h3 class="card-title" style="font-size:24px; margin-bottom:6px;">Write the equivalent</h3>
+          <p style="font-size:18px; margin:0;">Modern kernel idioms (V4L2 sub-devices, devres, regmap). GPLv3-licensed. No vendor code copied.</p>
+        </div>
+      </div>
+
+      <div class="push" style="margin-top:32px; padding:18px 24px; background:var(--panel); border:1px dashed var(--border-2); border-radius:10px; font-family:var(--font-mono); font-size:20px; color:var(--text-dim);">
+        <span style="color:var(--green)">&rarr;</span> The blob's ioctl trace is its <span class="mono-green">de facto spec</span>. Read the firehose, write the spec, ship the driver.
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page">&middot;</span>
+    </div>
+  </section>
+
+  <!-- ========================= NEW · open-tx-isp progress ========================= -->
+  <section class="slide" data-label="open-tx-isp status">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> ./scripts/coverage.sh</span>
+      <span class="meta">§ 02 &middot; status</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">Where we are</div>
+      <h2 class="h-title">open-tx-isp &mdash; current status</h2>
+      <div class="h-sub">// what's running today vs. what's still WIP</div>
+
+      <div class="tbl" style="margin-top:36px; font-size:20px;">
+        <div class="row head" style="grid-template-columns: 1.6fr 0.8fr 1.6fr 0.8fr;">
+          <div>Subsystem</div><div>Status</div><div>Notes</div><div>SoCs</div>
+        </div>
+        <div class="row" style="grid-template-columns: 1.6fr 0.8fr 1.6fr 0.8fr;">
+          <div>Sensor probe + streaming</div>
+          <div class="ok" style="font-weight:600">&check; working</div>
+          <div>SC2335, SC2336, IMX307 known-good</div>
+          <div class="dim">T31 / T41</div>
+        </div>
+        <div class="row alt" style="grid-template-columns: 1.6fr 0.8fr 1.6fr 0.8fr;">
+          <div>Tuning binary parser</div>
+          <div class="ok" style="font-weight:600">&check; working</div>
+          <div>Format reverse-engineered, applied at init</div>
+          <div class="dim">all</div>
+        </div>
+        <div class="row" style="grid-template-columns: 1.6fr 0.8fr 1.6fr 0.8fr;">
+          <div>Auto exposure / WB</div>
+          <div class="warn" style="font-weight:600">~ WIP</div>
+          <div>Stats path live; tuning loop in progress</div>
+          <div class="dim">T31 / T41</div>
+        </div>
+        <div class="row alt" style="grid-template-columns: 1.6fr 0.8fr 1.6fr 0.8fr;">
+          <div>3D NR / sharpen</div>
+          <div class="warn" style="font-weight:600">~ WIP</div>
+          <div>Single-frame path done; temporal next</div>
+          <div class="dim">T41</div>
+        </div>
+        <div class="row" style="grid-template-columns: 1.6fr 0.8fr 1.6fr 0.8fr;">
+          <div>Modern kernel port</div>
+          <div class="warn" style="font-weight:600">~ partial</div>
+          <div>Boots on 5.15 &mdash; 6.x cleanup ongoing</div>
+          <div class="dim">all</div>
+        </div>
+      </div>
+
+      <div class="push" style="margin-top:28px; display:flex; justify-content:space-between; align-items:center; font-family:var(--font-mono); font-size:20px;">
+        <span class="pill green"><span class="dot"></span>contributions welcome &middot; PRs reviewed</span>
+        <span class="mono-green">github.com/opensensor/open-tx-isp &rarr;</span>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page">&middot;</span>
+    </div>
+  </section>
+
+  <!-- ========================= NEW · Disassemblers ========================= -->
+  <section class="slide" data-label="Disassemblers">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> binaryninja tx-isp.ko</span>
+      <span class="meta">§ 02 &middot; tooling</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">Tools of the trade</div>
+      <h2 class="h-title">Reverse engineering kernel modules</h2>
+      <div class="h-sub">// MIPS &middot; stripped symbols &middot; undocumented register banks</div>
+
+      <div class="row2" style="margin-top:36px; flex:1; min-height:0;">
+        <div class="card accent-blue" style="padding:24px 28px;">
+          <div class="card-label">Binary Ninja</div>
+          <h3 class="card-title">Strong MIPS HLIL, scriptable, fast</h3>
+          <ul>
+            <li>HLIL reads close to C &mdash; great for ioctl dispatch tables</li>
+            <li>Python plugin API for batch annotation</li>
+            <li>Type system that survives across binaries</li>
+            <li>Commercial &mdash; license cost is the friction</li>
+          </ul>
+        </div>
+        <div class="card accent-green" style="padding:24px 28px;">
+          <div class="card-label">Ghidra</div>
+          <h3 class="card-title">Free, NSA-blessed, decompiles MIPS</h3>
+          <ul>
+            <li>P-code IR &mdash; cross-arch queries</li>
+            <li>Strong batch / headless mode</li>
+            <li>Decent kernel-module loader after some setup</li>
+            <li>Slower UX, but unbeatable price</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="push" style="margin-top:28px; padding:18px 24px; background:var(--panel-2); border:1px solid var(--border); border-radius:12px; display:grid; grid-template-columns: 1fr 1fr; gap:32px;">
+        <div>
+          <div class="mono-green" style="font-size:14px; letter-spacing:0.22em; text-transform:uppercase; margin-bottom:6px;">What helps most</div>
+          <div style="font-size:19px; line-height:1.4; color:var(--text-dim);">
+            Loading the matching <code class="inline">vmlinux</code> alongside the .ko so kernel symbol references resolve. Without it, every call into the kernel is a black hole.
+          </div>
+        </div>
+        <div>
+          <div class="mono-amber" style="font-size:14px; letter-spacing:0.22em; text-transform:uppercase; margin-bottom:6px;">What still hurts</div>
+          <div style="font-size:19px; line-height:1.4; color:var(--text-dim);">
+            Indirect calls through function pointers in <code class="inline">file_operations</code> tables. Static analysis loses the trail; runtime tracing fills the gap.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page">&middot;</span>
+    </div>
+  </section>
+
+  <!-- ========================= NEW · smartdiff MCP ========================= -->
+  <section class="slide" data-label="smartdiff MCP">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> claude mcp add smartdiff</span>
+      <span class="meta">§ 02 &middot; force multiplier</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">Force-multiplier</div>
+      <h2 class="h-title">smartdiff &mdash; semantic diff for binaries (via MCP)</h2>
+      <div class="h-sub">// LLMs that read functions, not bytes &mdash; surfaced as a Model Context Protocol server</div>
+
+      <div class="row3" style="margin-top:36px;">
+        <div class="card accent-blue" style="padding:22px 26px;">
+          <div class="card-label">What</div>
+          <h3 class="card-title" style="font-size:26px; margin-bottom:8px;">Function-level binary diff</h3>
+          <p style="font-size:19px; margin:0;">Pairs functions across two builds by structure and semantics, not raw bytes &mdash; survives reordering, inlining, and register allocation.</p>
+        </div>
+        <div class="card accent-amber" style="padding:22px 26px;">
+          <div class="card-label">Why</div>
+          <h3 class="card-title" style="font-size:26px; margin-bottom:8px;">SoC generations diverge</h3>
+          <p style="font-size:19px; margin:0;">Vendor ships <code class="inline">tx-isp v1.13</code> &rarr; <code class="inline">v2.04</code>. We want to know <em>what changed</em>, not <em>what shifted</em>.</p>
+        </div>
+        <div class="card accent-green" style="padding:22px 26px;">
+          <div class="card-label">How</div>
+          <h3 class="card-title" style="font-size:26px; margin-bottom:8px;">Talk to it from Claude</h3>
+          <p style="font-size:19px; margin:0;">MCP server &mdash; the LLM calls <code class="inline">diff(funcA, funcB)</code>, gets aligned IR, reasons about behavior change.</p>
+        </div>
+      </div>
+
+      <div class="term" style="margin-top:28px;">
+        <div class="term-head">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="title">claude &middot; smartdiff session</span>
+        </div>
+        <div class="term-body" style="font-size:19px; line-height:1.55;"><span class="prompt">&gt;</span> <span class="cmd">diff isp_set_tuning between v1.13 and v2.04</span>
+<span class="out">aligned 47/52 basic blocks</span>
+<span class="hi">behavioral delta:
+  + new gain-table validation (rejects out-of-range entries)
+  ~ AWB convergence threshold tightened (0x1f &rarr; 0x0f)
+  - direct register write at 0x13300040 dropped; now goes through helper</span>
+
+<span class="prompt">&gt;</span> <span class="cmd">does this affect our open-tx-isp port?</span>
+<span class="out">yes &mdash; the new validation rejects values our test harness emits.
+suggest tightening our gain table writer and adding the same bounds check.</span></div>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page">&middot;</span>
     </div>
   </section>
 
@@ -1295,9 +1854,13 @@ code.inline {
       <span class="meta">§ 04 · breakthrough</span>
     </div>
     <div class="body">
-      <div class="eyebrow">Breakthrough</div>
+      <div class="eyebrow">Breakthrough &middot; co-research with Alfonso Gamboa</div>
       <h2 class="h-title">Boot ROM analysis</h2>
       <div class="h-sub">// extracting the immutable code that decides everything</div>
+      <div style="margin-top:14px; display:flex; align-items:center; gap:10px; font-family:var(--font-mono); font-size:18px; color:var(--text-dim);">
+        <span class="pill green"><span class="dot"></span>credit</span>
+        <span><span class="mono-green">Alfonso Gamboa</span> figured out that the cloner protocol exposes the entire boot ROM &mdash; the move that unlocked everything that follows.</span>
+      </div>
 
       <div class="term" style="margin-top:48px;">
         <div class="term-head">
@@ -2310,6 +2873,24 @@ code.inline {
       }
     };
     check();
+  })();
+</script>
+<script>
+  // Auto-populate page indicators based on actual slide order, so adding/removing
+  // slides doesn't require touching every chrome-bot block. Existing hand-coded
+  // NN/NN values just get overwritten on load.
+  (function syncPages() {
+    const slides = document.querySelectorAll('deck-stage > section');
+    if (!slides.length) { requestAnimationFrame(syncPages); return; }
+    const pad = (n) => String(n).padStart(2, '0');
+    const total = pad(slides.length);
+    slides.forEach((slide, i) => {
+      const page = slide.querySelector('.chrome-bot .page');
+      if (!page) return;
+      page.innerHTML =
+        '<span style="color:var(--green)">' + pad(i + 1) + '</span>' +
+        '<span class="sep">/</span>' + total;
+    });
   })();
 </script>
 <script>
