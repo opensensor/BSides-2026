@@ -506,6 +506,91 @@ code.inline {
 .title-hero .byline .who { color: var(--green); font-weight: 500; }
 .title-hero .byline .sep { color: var(--muted-2); }
 
+/* ── Expandable image (click → lightbox) ──────────────────────────── */
+.img-expand {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #000;
+  cursor: zoom-in;
+  transition: border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+.img-expand:hover {
+  border-color: var(--green);
+  transform: translateY(-2px);
+  box-shadow: 0 18px 40px rgba(0,0,0,0.5);
+}
+.img-expand img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.img-expand .img-expand-hint {
+  position: absolute;
+  right: 10px; bottom: 10px;
+  padding: 4px 10px;
+  background: rgba(0,0,0,0.7);
+  color: var(--green);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  border: 1px solid rgba(0,227,140,0.4);
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+/* ── Lightbox overlay ─────────────────────────────────────────────── */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(2,4,8,0.94);
+  z-index: 2147483600;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  backdrop-filter: blur(6px);
+}
+.lightbox[data-open] { display: flex; }
+.lightbox img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 8px;
+  box-shadow: 0 30px 100px rgba(0,0,0,0.7);
+}
+.lightbox .lb-caption {
+  position: absolute;
+  left: 0; right: 0; bottom: 28px;
+  text-align: center;
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+  font-size: 18px;
+  letter-spacing: 0.02em;
+}
+.lightbox .lb-close {
+  position: absolute;
+  top: 24px; right: 28px;
+  width: 48px; height: 48px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+.lightbox .lb-close:hover {
+  background: rgba(0,227,140,0.15);
+  border-color: var(--green);
+  color: var(--green);
+}
+
 </style>
 </head>
 <body>
@@ -520,7 +605,7 @@ code.inline {
         <span class="cmd">./bsides_maine_2026</span>
       </div>
       <h1>From Firmware<br>Dumps to <span class="accent">Driver<br>Development</span>.</h1>
-      <div class="tag">An embedded camera hacking journey · 3 years in 40 minutes</div>
+      <div class="tag">An embedded camera hacking journey · 3 years in 45 minutes</div>
       <div class="byline" style="font-size:26px">
         <span class="who">Matt Davis</span>
         <span class="sep">·</span>
@@ -536,51 +621,11 @@ code.inline {
     </div>
     <div class="chrome-bot">
       <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page"><span style="color:var(--green)">01</span><span class="sep">/</span>20</span>
+      <span class="page"><span style="color:var(--green)">01</span><span class="sep">/</span>21</span>
     </div>
   </section>
 
-  <!-- ========================= SLIDE 2 — Firmware/SoC ========================= -->
-  <section class="slide" data-label="Firmware & SoC">
-    <div class="chrome-top">
-      <span><span class="prompt">$</span> man firmware_soc<span class="cursor"></span></span>
-      <span class="meta">§ 01 · primer</span>
-    </div>
-    <div class="body">
-      <div class="eyebrow">Chapter 01 · The Primer</div>
-      <h2 class="h-title">What is firmware? What is an SoC?</h2>
-      <div class="h-sub">// the terrain we're about to map</div>
-
-      <div class="row2" style="margin-top:56px; flex:1;">
-        <div class="card accent-green">
-          <div class="card-label">Firmware</div>
-          <h3 class="card-title">Software permanently stored on hardware</h3>
-          <ul>
-            <li>Lives on flash chips &mdash; SPI NOR, SPI NAND, eMMC</li>
-            <li>Layered: <code class="inline">bootloader → kernel → rootfs</code></li>
-            <li>Readable, modifiable, reflashable &mdash; if you can reach it</li>
-            <li>What actually runs when you plug the thing in</li>
-          </ul>
-        </div>
-        <div class="card accent-blue">
-          <div class="card-label">System on Chip</div>
-          <h3 class="card-title">CPU + RAM + peripherals on one die</h3>
-          <ul>
-            <li>ISP, NPU, crypto engines, GPIO, video encoders</li>
-            <li>Contains a <strong style="color:var(--blue)">boot ROM</strong> &mdash; immutable mask ROM</li>
-            <li>OTP fuses carry per-chip secrets &amp; config</li>
-            <li>The silicon decides what runs first. You don't.</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-    <div class="chrome-bot">
-      <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page"><span style="color:var(--green)">02</span><span class="sep">/</span>20</span>
-    </div>
-  </section>
-
-  <!-- ========================= SLIDE 3 — Why Cameras ========================= -->
+  <!-- ========================= SLIDE 2 — Why Cameras ========================= -->
   <section class="slide" data-label="Why Cameras">
     <div class="chrome-top">
       <span><span class="prompt">$</span> why cameras --explain</span>
@@ -589,9 +634,34 @@ code.inline {
     <div class="body">
       <div class="eyebrow">Target Rationale</div>
       <h2 class="h-title">Why security cameras?</h2>
-      <div class="h-sub">// a perfect embedded research target, hiding in plain sight</div>
+      <div class="h-sub">// some folks have been asking me &mdash; here's the honest answer</div>
 
-      <div class="row4" style="margin-top:56px">
+      <!-- Personal origin note -->
+      <div style="margin-top:32px; padding:22px 28px; background:var(--panel-2); border:1px solid var(--border); border-radius:12px; display:grid; grid-template-columns: 1fr 1.4fr; gap:36px; align-items:start;">
+        <div style="display:flex; gap:18px; align-items:flex-start;">
+          <div class="img-expand"
+               data-src="photos/linux_device_drivers_book.jpg"
+               data-caption="Linux Device Drivers — Corbet, Rubini &amp; Kroah-Hartman (O'Reilly)"
+               style="flex:0 0 110px; width:110px; height:148px; background:#fff;">
+            <img src="photos/linux_device_drivers_book.jpg" alt="Linux Device Drivers book cover">
+            <div class="img-expand-hint" style="font-size:11px; padding:2px 6px; right:4px; bottom:4px;">⤢</div>
+          </div>
+          <div>
+            <div class="mono-green" style="font-size:13px; letter-spacing:0.22em; text-transform:uppercase; margin-bottom:6px;">Background</div>
+            <div style="font-size:21px; line-height:1.45; color:var(--text-dim);">
+              Read <em>Linux Device Drivers, 2nd edition</em> in college and shipped real drivers around <span class="mono-green">2006</span> &mdash; then a long break from that world.
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="mono-amber" style="font-size:13px; letter-spacing:0.22em; text-transform:uppercase; margin-bottom:6px;">Why cameras, why now</div>
+          <div style="font-size:21px; line-height:1.45; color:var(--text-dim);">
+            Coming back, I wanted something that would actually challenge me. Cheap IP cameras sit right at the intersection of <span class="mono-green">Linux</span>, <span class="mono-blue">hardware</span>, <span class="mono-amber">DSP</span>, and modern <span class="mono-coral">AI/ML</span> &mdash; an edge-Linux box for less than a nice dinner. I was already buying them and wanted more control over the ones I owned.
+          </div>
+        </div>
+      </div>
+
+      <div class="row4" style="margin-top:28px">
         <div class="card accent-green">
           <div class="card-label">01 · OS</div>
           <h3 class="card-title" style="font-size:30px">Full Linux SoC</h3>
@@ -614,17 +684,141 @@ code.inline {
         </div>
       </div>
 
-      <div class="push" style="margin-top:60px; font-family:var(--font-mono); font-size:22px; color:var(--muted);">
+      <div class="push" style="margin-top:36px; font-family:var(--font-mono); font-size:22px; color:var(--muted);">
         <span style="color:var(--green)">$</span> cheap · ubiquitous · complex · increasingly hostile to owners.
       </div>
     </div>
     <div class="chrome-bot">
       <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page"><span style="color:var(--green)">03</span><span class="sep">/</span>20</span>
+      <span class="page"><span style="color:var(--green)">02</span><span class="sep">/</span>21</span>
     </div>
   </section>
 
-  <!-- ========================= SLIDE 4 — Clip methods ========================= -->
+  <!-- ========================= SLIDE 3 — Firmware/SoC ========================= -->
+  <section class="slide" data-label="Firmware & SoC">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> man firmware_soc<span class="cursor"></span></span>
+      <span class="meta">§ 01 · primer</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">Chapter 01 · The Primer</div>
+      <h2 class="h-title">What is firmware? What is an SoC?</h2>
+      <div class="h-sub">// the terrain we're about to map</div>
+
+      <div class="row2" style="margin-top:48px; flex:1; min-height:0;">
+        <div class="card accent-green" style="display:flex; flex-direction:column; min-height:0;">
+          <div class="card-label">Firmware</div>
+          <h3 class="card-title">Software permanently stored on hardware</h3>
+          <ul>
+            <li>Lives on flash chips &mdash; SPI NOR, SPI NAND, eMMC</li>
+            <li>Layered: <code class="inline">bootloader → kernel → rootfs</code></li>
+            <li>Readable, modifiable, reflashable &mdash; if you can reach it</li>
+            <li>What actually runs when you plug the thing in</li>
+          </ul>
+        </div>
+        <div class="card accent-blue" style="display:flex; flex-direction:column; gap:18px; min-height:0;">
+          <div class="card-label">System on Chip</div>
+          <h3 class="card-title" style="margin-bottom:0">CPU + RAM + peripherals on one die</h3>
+          <div class="img-expand"
+               data-src="photos/t41_soc_example.png"
+               data-caption="T41 dev board — the Ingenic SoC die at center; flash, sensor, lens hang off it"
+               style="flex:1; min-height:0;">
+            <img src="photos/t41_soc_example.png" alt="T41 board with the Ingenic SoC labeled at center">
+            <div class="img-expand-hint">⤢ click to expand</div>
+          </div>
+          <ul style="margin:0">
+            <li style="font-size:20px; padding:4px 0 4px 24px;">ISP, NPU, crypto engines, GPIO, video encoders</li>
+            <li style="font-size:20px; padding:4px 0 4px 24px;">Contains a <strong style="color:var(--blue)">boot ROM</strong> &mdash; immutable mask ROM</li>
+            <li style="font-size:20px; padding:4px 0 4px 24px;">OTP fuses carry per-chip secrets &amp; config</li>
+            <li style="font-size:20px; padding:4px 0 4px 24px;">The silicon decides what runs first. You don't.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page"><span style="color:var(--green)">03</span><span class="sep">/</span>21</span>
+    </div>
+  </section>
+
+  <!-- ========================= SLIDE 4 — NAND vs NOR ========================= -->
+  <section class="slide" data-label="NAND vs NOR">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> man flash --types</span>
+      <span class="meta">§ 02 · flash storage</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">Chapter 02 · Know your flash</div>
+      <h2 class="h-title">NOR vs NAND &mdash; not the same chip</h2>
+      <div class="h-sub">// the chip you clip onto changes everything downstream</div>
+
+      <div class="row2" style="margin-top:24px; gap:24px; flex:1; min-height:0;">
+        <!-- NOR column -->
+        <div class="card accent-amber" style="display:flex; flex-direction:column; gap:12px; padding:18px 22px; min-height:0;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+            <div class="card-label" style="margin:0">SPI NOR</div>
+            <span class="pill amber"><span class="dot"></span>byte-addressable</span>
+          </div>
+          <div class="img-expand"
+               data-src="photos/t41_nor_example.png"
+               data-caption="T41 dev board — small SOIC-8 SPI NOR (byte-addressable, XIP-capable)"
+               style="flex:1; min-height:0;">
+            <img src="photos/t41_nor_example.png" alt="T41 board with SPI NOR flash highlighted">
+            <div class="img-expand-hint">⤢ click to expand</div>
+          </div>
+          <ul style="margin:0; padding:0; list-style:none;">
+            <li style="font-size:18px; padding:2px 0 2px 22px;">Small &mdash; 1 to 32 MB typical</li>
+            <li style="font-size:18px; padding:2px 0 2px 22px;">Execute-in-place (XIP) capable</li>
+            <li style="font-size:18px; padding:2px 0 2px 22px;">No bad blocks &mdash; what you read is what's there</li>
+            <li style="font-size:18px; padding:2px 0 2px 22px;">Filesystem: <code class="inline">SquashFS</code> or raw blobs</li>
+          </ul>
+        </div>
+
+        <!-- NAND column -->
+        <div class="card accent-blue" style="display:flex; flex-direction:column; gap:12px; padding:18px 22px; min-height:0;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+            <div class="card-label" style="margin:0">SPI NAND</div>
+            <span class="pill blue"><span class="dot"></span>page / block-addressable</span>
+          </div>
+          <div class="img-expand"
+               data-src="photos/t40_nand_example.png"
+               data-caption="T40 board — denser SPI NAND (read in pages, erase in blocks, ships with bad blocks)"
+               style="flex:1; min-height:0;">
+            <img src="photos/t40_nand_example.png" alt="T40 board with SPI NAND flash highlighted">
+            <div class="img-expand-hint">⤢ click to expand</div>
+          </div>
+          <ul style="margin:0; padding:0; list-style:none;">
+            <li style="font-size:18px; padding:2px 0 2px 22px;">Big &mdash; 128 MB to multi-GB</li>
+            <li style="font-size:18px; padding:2px 0 2px 22px;">Read in pages, erase in blocks</li>
+            <li style="font-size:18px; padding:2px 0 2px 22px;">Born with <span class="mono-coral">bad blocks</span> &mdash; and grows more over time</li>
+            <li style="font-size:18px; padding:2px 0 2px 22px;">Filesystem: <code class="inline">UBI + UBIFS</code> over MTD</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Trade-off bar: more space comes with bad block management -->
+      <div style="margin-top:18px; padding:16px 24px; background:var(--panel-2); border:1px solid var(--border); border-radius:12px; display:grid; grid-template-columns: 1fr 1fr; gap:28px;">
+        <div>
+          <div class="mono-green" style="font-size:13px; letter-spacing:0.22em; text-transform:uppercase; margin-bottom:4px;">More space &mdash; more abstraction</div>
+          <div style="font-size:18px; line-height:1.35; color:var(--text-dim);">
+            NAND density is paid for in software: the kernel runs <code class="inline">UBI</code> &mdash; wear leveling, bad-block tracking, ECC &mdash; underneath <code class="inline">UBIFS</code>. Your filesystem is layers above raw silicon.
+          </div>
+        </div>
+        <div>
+          <div class="mono-amber" style="font-size:13px; letter-spacing:0.22em; text-transform:uppercase; margin-bottom:4px;">Why it matters to us</div>
+          <div style="font-size:18px; line-height:1.35; color:var(--text-dim);">
+            Dumping NAND is <em>not</em> dumping a filesystem &mdash; you get raw pages with OOB ECC bytes. Reconstructing the rootfs means decoding <code class="inline">UBI</code> volumes before you ever see <code class="inline">/etc</code>.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page"><span style="color:var(--green)">04</span><span class="sep">/</span>21</span>
+    </div>
+  </section>
+
+  <!-- ========================= SLIDE 5 — Clip methods ========================= -->
   <section class="slide" data-label="Firmware Extraction">
     <div class="chrome-top">
       <span><span class="prompt">$</span> flashrom --help</span>
@@ -675,11 +869,11 @@ code.inline {
     </div>
     <div class="chrome-bot">
       <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page"><span style="color:var(--green)">04</span><span class="sep">/</span>20</span>
+      <span class="page"><span style="color:var(--green)">05</span><span class="sep">/</span>21</span>
     </div>
   </section>
 
-  <!-- ========================= SLIDE 5 — USB ========================= -->
+  <!-- ========================= SLIDE 6 — USB ========================= -->
   <section class="slide" data-label="USB Extraction">
     <div class="chrome-top">
       <span><span class="prompt">$</span> dmesg | grep ingenic</span>
@@ -702,7 +896,7 @@ code.inline {
             <h3 class="card-title" style="font-size:32px">The <span class="mono-blue">cloner</span> protocol</h3>
             <p>Read flash, write flash, execute code &mdash; all over USB. Intended for factory reflash. We have other plans.</p>
           </div>
-          <div class="pill green"><span class="dot"></span>Foreshadowing &mdash; this same protocol gave us boot ROM access.</div>
+          <div class="pill green"><span class="dot"></span>Foreshadowing &mdash; this same protocol may be able to give us additional information.</div>
         </div>
 
         <div class="term" style="align-self:stretch;">
@@ -725,11 +919,11 @@ code.inline {
     </div>
     <div class="chrome-bot">
       <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page"><span style="color:var(--green)">05</span><span class="sep">/</span>20</span>
+      <span class="page"><span style="color:var(--green)">06</span><span class="sep">/</span>21</span>
     </div>
   </section>
 
-  <!-- ========================= SLIDE 6 — Ingenic case study ========================= -->
+  <!-- ========================= SLIDE 7 — Ingenic case study ========================= -->
   <section class="slide" data-label="Ingenic Case Study">
     <div class="chrome-top">
       <span><span class="prompt">$</span> cat /proc/cpuinfo</span>
@@ -741,32 +935,28 @@ code.inline {
       <div class="h-sub">// excellent image quality · cheap devices · FCC teardowns on public record</div>
 
       <div class="tbl" style="margin-top:48px; font-size:20px;">
-        <div class="row head" style="grid-template-columns: 1fr 1.4fr 2.2fr 1.2fr;">
-          <div>SoC</div><div>CPU</div><div>Typical Devices</div><div>Secure Boot?</div>
+        <div class="row head" style="grid-template-columns: 1fr 1.4fr 2.6fr;">
+          <div>SoC</div><div>CPU</div><div>Typical Devices</div>
         </div>
-        <div class="row" style="grid-template-columns: 1fr 1.4fr 2.2fr 1.2fr;">
+        <div class="row" style="grid-template-columns: 1fr 1.4fr 2.6fr;">
           <div class="mono-green" style="font-weight:600">T21 / T23</div>
           <div>XBurst1 (MIPS)</div>
           <div>Budget IP cameras</div>
-          <div class="dim">Yes (untested)</div>
         </div>
-        <div class="row alt" style="grid-template-columns: 1fr 1.4fr 2.2fr 1.2fr;">
+        <div class="row alt" style="grid-template-columns: 1fr 1.4fr 2.6fr;">
           <div class="mono-green" style="font-weight:600">T31</div>
           <div>XBurst1 (MIPS)</div>
           <div>Video doorbells · mid-range cams</div>
-          <div class="bad" style="font-weight:600">Yes (flawed)</div>
         </div>
-        <div class="row" style="grid-template-columns: 1fr 1.4fr 2.2fr 1.2fr;">
+        <div class="row" style="grid-template-columns: 1fr 1.4fr 2.6fr;">
           <div class="mono-green" style="font-weight:600">T40 / T41</div>
           <div>XBurst2 (MIPS)</div>
           <div>Pan/tilt cams · newer devices</div>
-          <div class="bad" style="font-weight:600">Yes (flawed)</div>
         </div>
-        <div class="row alt" style="grid-template-columns: 1fr 1.4fr 2.2fr 1.2fr;">
+        <div class="row alt" style="grid-template-columns: 1fr 1.4fr 2.6fr;">
           <div class="mono-green" style="font-weight:600">A1</div>
           <div>XBurst2 (MIPS)</div>
           <div>NVR-style devices</div>
-          <div class="dim">Yes (untested)</div>
         </div>
       </div>
 
@@ -775,16 +965,19 @@ code.inline {
           <div class="card-label" style="margin:0">Open source alternative firmware</div>
           <div style="font-family:var(--font-sans); font-size:28px; color:var(--text); margin-top:4px;">Thingino &mdash; a full Linux rebuild for these cameras</div>
         </div>
-        <div class="mono-green" style="font-size:26px">thingino.com →</div>
+        <div class="mono-green" style="font-size:22px; text-align:right; line-height:1.35;">
+          thingino.com<br>
+          <span style="font-size:18px;">github.com/themactep/thingino-firmware →</span>
+        </div>
       </div>
     </div>
     <div class="chrome-bot">
       <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page"><span style="color:var(--green)">06</span><span class="sep">/</span>20</span>
+      <span class="page"><span style="color:var(--green)">07</span><span class="sep">/</span>21</span>
     </div>
   </section>
 
-  <!-- ========================= SLIDE 7 — Why stuck on old kernels ========================= -->
+  <!-- ========================= SLIDE 8 — Why stuck on old kernels ========================= -->
   <section class="slide" data-label="ISP Driver Problem">
     <div class="chrome-top">
       <span><span class="prompt">$</span> uname -r</span>
@@ -823,11 +1016,11 @@ code.inline {
     </div>
     <div class="chrome-bot">
       <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page"><span style="color:var(--green)">07</span><span class="sep">/</span>20</span>
+      <span class="page"><span style="color:var(--green)">08</span><span class="sep">/</span>21</span>
     </div>
   </section>
 
-  <!-- ========================= SLIDE 8 — Secure boot motivation ========================= -->
+  <!-- ========================= SLIDE 9 — Secure boot motivation ========================= -->
   <section class="slide" data-label="Secure Boot Motivation">
     <div class="chrome-top">
       <span><span class="prompt">$</span> whose_device_is_it_anyway.sh</span>
@@ -859,11 +1052,11 @@ code.inline {
     </div>
     <div class="chrome-bot">
       <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page"><span style="color:var(--green)">08</span><span class="sep">/</span>20</span>
+      <span class="page"><span style="color:var(--green)">09</span><span class="sep">/</span>21</span>
     </div>
   </section>
 
-  <!-- ========================= SLIDE 9 — Secure Boot 101 ========================= -->
+  <!-- ========================= SLIDE 10 — Secure Boot 101 ========================= -->
   <section class="slide" data-label="Secure Boot 101">
     <div class="chrome-top">
       <span><span class="prompt">$</span> how_does_secure_boot_work</span>
@@ -916,11 +1109,11 @@ code.inline {
     </div>
     <div class="chrome-bot">
       <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page"><span style="color:var(--green)">09</span><span class="sep">/</span>20</span>
+      <span class="page"><span style="color:var(--green)">10</span><span class="sep">/</span>21</span>
     </div>
   </section>
 
-  <!-- ========================= SLIDE 10 — Ethics ========================= -->
+  <!-- ========================= SLIDE 11 — Ethics ========================= -->
   <section class="slide" data-label="Ethics">
     <div class="chrome-top">
       <span><span class="prompt">$</span> # a brief disclaimer</span>
@@ -947,11 +1140,11 @@ code.inline {
     </div>
     <div class="chrome-bot">
       <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page"><span style="color:var(--green)">10</span><span class="sep">/</span>20</span>
+      <span class="page"><span style="color:var(--green)">11</span><span class="sep">/</span>21</span>
     </div>
   </section>
 
-  <!-- ========================= SLIDE 11 — Timeline ========================= -->
+  <!-- ========================= SLIDE 12 — Timeline ========================= -->
   <section class="slide" data-label="3-Year Timeline">
     <div class="chrome-top">
       <span><span class="prompt">$</span> git log --since=2023 --oneline</span>
@@ -993,11 +1186,11 @@ code.inline {
     </div>
     <div class="chrome-bot">
       <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page"><span style="color:var(--green)">11</span><span class="sep">/</span>20</span>
+      <span class="page"><span style="color:var(--green)">12</span><span class="sep">/</span>21</span>
     </div>
   </section>
 
-  <!-- ========================= SLIDE 12 — Mune spark ========================= -->
+  <!-- ========================= SLIDE 13 — Mune spark ========================= -->
   <section class="slide" data-label="The Spark">
     <div class="chrome-top">
       <span><span class="prompt">$</span> # the spark</span>
@@ -1027,11 +1220,11 @@ code.inline {
     </div>
     <div class="chrome-bot">
       <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page"><span style="color:var(--green)">12</span><span class="sep">/</span>20</span>
+      <span class="page"><span style="color:var(--green)">13</span><span class="sep">/</span>21</span>
     </div>
   </section>
 
-  <!-- ========================= SLIDE 13 — SoC swaps ========================= -->
+  <!-- ========================= SLIDE 14 — SoC swaps ========================= -->
   <section class="slide" data-label="SoC Swaps">
     <div class="chrome-top">
       <span><span class="prompt">$</span> hot_air_gun --temp 380</span>
@@ -1068,11 +1261,11 @@ code.inline {
     </div>
     <div class="chrome-bot">
       <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page"><span style="color:var(--green)">13</span><span class="sep">/</span>20</span>
+      <span class="page"><span style="color:var(--green)">14</span><span class="sep">/</span>21</span>
     </div>
   </section>
 
-  <!-- ========================= SLIDE 14 — Boot ROM analysis ========================= -->
+  <!-- ========================= SLIDE 15 — Boot ROM analysis ========================= -->
   <section class="slide" data-label="Boot ROM Analysis">
     <div class="chrome-top">
       <span><span class="prompt">$</span> binja bootrom.bin</span>
@@ -1114,11 +1307,11 @@ code.inline {
     </div>
     <div class="chrome-bot">
       <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page"><span style="color:var(--green)">14</span><span class="sep">/</span>20</span>
+      <span class="page"><span style="color:var(--green)">15</span><span class="sep">/</span>21</span>
     </div>
   </section>
 
-  <!-- ========================= SLIDE 15 — Two vuln classes ========================= -->
+  <!-- ========================= SLIDE 16 — Two vuln classes ========================= -->
   <section class="slide" data-label="Two Vuln Classes">
     <div class="chrome-top">
       <span><span class="prompt">$</span> cat findings.md</span>
@@ -1158,11 +1351,11 @@ code.inline {
     </div>
     <div class="chrome-bot">
       <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page"><span style="color:var(--green)">15</span><span class="sep">/</span>20</span>
+      <span class="page"><span style="color:var(--green)">16</span><span class="sep">/</span>21</span>
     </div>
   </section>
 
-  <!-- ========================= SLIDE 16 — AI-assisted RE ========================= -->
+  <!-- ========================= SLIDE 17 — AI-assisted RE ========================= -->
   <section class="slide" data-label="AI-Assisted RE">
     <div class="chrome-top">
       <span><span class="prompt">$</span> mcp.pipe(binja, claude)</span>
@@ -1208,11 +1401,11 @@ code.inline {
     </div>
     <div class="chrome-bot">
       <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page"><span style="color:var(--green)">16</span><span class="sep">/</span>20</span>
+      <span class="page"><span style="color:var(--green)">17</span><span class="sep">/</span>21</span>
     </div>
   </section>
 
-  <!-- ========================= SLIDE 17 — T31 ========================= -->
+  <!-- ========================= SLIDE 18 — T31 ========================= -->
   <section class="slide" data-label="T31 32-bit Flaw">
     <div class="chrome-top">
       <span><span class="prompt">$</span> forge --target t31 --time 217s</span>
@@ -1271,11 +1464,11 @@ code.inline {
     </div>
     <div class="chrome-bot">
       <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page"><span style="color:var(--green)">17</span><span class="sep">/</span>20</span>
+      <span class="page"><span style="color:var(--green)">18</span><span class="sep">/</span>21</span>
     </div>
   </section>
 
-  <!-- ========================= SLIDE 18 — Newer SoCs ========================= -->
+  <!-- ========================= SLIDE 19 — Newer SoCs ========================= -->
   <section class="slide" data-label="Newer SoCs">
     <div class="chrome-top">
       <span><span class="prompt">$</span> diff t31 t41 | grep crypto</span>
@@ -1312,11 +1505,11 @@ code.inline {
     </div>
     <div class="chrome-bot">
       <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page"><span style="color:var(--green)">18</span><span class="sep">/</span>20</span>
+      <span class="page"><span style="color:var(--green)">19</span><span class="sep">/</span>21</span>
     </div>
   </section>
 
-  <!-- ========================= SLIDE 19 — T41 bypass ========================= -->
+  <!-- ========================= SLIDE 20 — T41 bypass ========================= -->
   <section class="slide" data-label="T41 Bypass">
     <div class="chrome-top">
       <span><span class="prompt">$</span> write 0x0 → 0x80000090</span>
@@ -1367,11 +1560,11 @@ code.inline {
     </div>
     <div class="chrome-bot">
       <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page"><span style="color:var(--green)">19</span><span class="sep">/</span>20</span>
+      <span class="page"><span style="color:var(--green)">20</span><span class="sep">/</span>21</span>
     </div>
   </section>
 
-  <!-- ========================= SLIDE 20 — Bigger picture ========================= -->
+  <!-- ========================= SLIDE 21 — Bigger picture ========================= -->
   <section class="slide" data-label="The Bigger Picture">
     <div class="chrome-top">
       <span><span class="prompt">$</span> ./summary.sh</span>
@@ -1427,7 +1620,7 @@ code.inline {
     </div>
     <div class="chrome-bot">
       <span class="meta">bsides_maine_2026 // matt davis · thank you</span>
-      <span class="page"><span style="color:var(--green)">20</span><span class="sep">/</span>20</span>
+      <span class="page"><span style="color:var(--green)">21</span><span class="sep">/</span>21</span>
     </div>
   </section>
 
@@ -2094,6 +2287,69 @@ code.inline {
       }
     };
     check();
+  })();
+</script>
+<script>
+  // Lightbox: click any .img-expand to view full-size; X / ESC / backdrop closes.
+  (function() {
+    const overlay = document.createElement('div');
+    overlay.className = 'lightbox';
+    overlay.innerHTML =
+      '<button class="lb-close" type="button" aria-label="Close">&times;</button>' +
+      '<img alt="">' +
+      '<div class="lb-caption"></div>';
+    document.body.appendChild(overlay);
+    const lbImg = overlay.querySelector('img');
+    const lbCaption = overlay.querySelector('.lb-caption');
+    const lbClose = overlay.querySelector('.lb-close');
+
+    function openLb(src, caption) {
+      if (!src) return;
+      lbImg.src = src;
+      lbCaption.textContent = caption || '';
+      overlay.setAttribute('data-open', '');
+    }
+    function closeLb() {
+      overlay.removeAttribute('data-open');
+      lbImg.removeAttribute('src');
+    }
+
+    // Capture phase so this runs before deck-stage tap-zone handlers.
+    document.addEventListener('click', function(e) {
+      const trigger = e.target.closest && e.target.closest('.img-expand');
+      if (trigger) {
+        e.preventDefault();
+        e.stopPropagation();
+        const inner = trigger.querySelector('img');
+        openLb(trigger.dataset.src || (inner && inner.src), trigger.dataset.caption || '');
+        return;
+      }
+      if (overlay.hasAttribute('data-open')) {
+        if (e.target === overlay || (e.target.classList && e.target.classList.contains('lb-close'))) {
+          e.preventDefault();
+          e.stopPropagation();
+          closeLb();
+        }
+      }
+    }, true);
+
+    lbClose.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      closeLb();
+    });
+
+    // Swallow keys while the lightbox is open so deck nav doesn't fire.
+    document.addEventListener('keydown', function(e) {
+      if (!overlay.hasAttribute('data-open')) return;
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        e.preventDefault();
+        e.stopPropagation();
+        closeLb();
+      } else {
+        e.stopPropagation();
+      }
+    }, true);
   })();
 </script>
 </body>
