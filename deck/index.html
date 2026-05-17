@@ -134,6 +134,20 @@ section.slide::before {
 }
 @keyframes blink { 50% { opacity: 0; } }
 
+/* Vertical marquee for terminal content that's taller than its frame.
+   Content must be duplicated inside the .term-scroll wrapper so the loop seams. */
+.term-marquee { overflow: hidden; position: relative; }
+.term-marquee .term-scroll {
+  display: block;
+  animation: term-scroll-up 32s linear infinite;
+  will-change: transform;
+}
+.term-marquee:hover .term-scroll { animation-play-state: paused; }
+@keyframes term-scroll-up {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
+
 .chrome-bot .meta  { color: var(--muted-2); }
 .chrome-bot .page  { color: var(--text-dim); font-variant-numeric: tabular-nums; }
 .chrome-bot .page .sep { color: var(--muted-2); margin: 0 6px; }
@@ -1028,29 +1042,30 @@ code.inline {
       <h2 class="h-title">binwalk &mdash; what's inside that .bin?</h2>
       <div class="h-sub">// a flash dump is a stack of headers if you know what to look for</div>
 
-      <div style="margin-top:36px; display:grid; grid-template-columns: 1.4fr 1fr; gap:28px; flex:1; min-height:0;">
+      <div style="margin-top:32px; display:grid; grid-template-columns: 1.55fr 1fr; gap:26px; flex:1; min-height:0;">
         <div class="term" style="display:flex; flex-direction:column; min-height:0;">
           <div class="term-head">
             <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-            <span class="title">terminal &middot; binwalk</span>
+            <span class="title">terminal &middot; binwalk firmware-backup-clip.bin</span>
           </div>
-          <div class="term-body" style="font-size:18px; line-height:1.55; flex:1;"><span class="prompt">$</span> <span class="cmd">binwalk firmware.bin</span>
+          <div class="term-body" style="font-size:15px; line-height:1.5; padding:18px 22px; flex:1;"><span class="prompt">$</span> <span class="cmd">binwalk firmware-backup-clip.bin</span>
 <span class="out">DECIMAL    HEX        DESCRIPTION
----------  ---------  ----------------------------------------</span>
-<span class="hi">0          0x0        uImage header, image size: 1572864</span>
-<span class="out">64         0x40       LZMA compressed data, lc:3, pb:2</span>
-<span class="hi">1572864    0x180000   Squashfs filesystem, version 4.0, 14 MB</span>
-<span class="out">15728640   0xF00000   JFFS2 filesystem, big endian (config)</span>
-<span class="out">16252928   0xF80000   U-Boot environment variables</span>
+---------  ---------  -------------------------------------------------</span>
+<span class="out">26624      0x6800     uImage, MIPS32, "u-boot-lzo.img" (164 KB, lzo)</span>
+<span class="out">295300     0x48184    JFFS2 filesystem, little endian (196 KB)</span>
+<span class="hi">524288     0x80000    uImage, MIPS32 Linux Kernel
+                      "Linux-3.10.14__isvp_swan_1.0__" (1.7 MB, lzma)</span>
+<span class="hi">2260992    0x228000   SquashFS v4.0, xz, 834 inodes, 5.95 MB</span>
+<span class="out">8224768    0x7D8000   JFFS2 filesystem, little endian (8.5 MB)</span>
 
-<span class="prompt">$</span> <span class="cmd">binwalk -Me firmware.bin</span>
+<span class="prompt">$</span> <span class="cmd">binwalk -Me firmware-backup-clip.bin</span>
 <span class="out">Extracting matched signatures, recursively...</span>
-<span class="hi">_firmware.bin.extracted/
-  &boxv;&boxh;&boxh; 40                     # uImage payload (LZMA)
-  &boxv;&boxh;&boxh; 180000.squashfs        # the rootfs
-  &boxv;&boxh;&boxh; squashfs-root/         # mounted tree
-  &boxv;&boxh;&boxh; F00000.jffs2           # config volume
-  &boxvr;&boxh;&boxh; F80000.env             # u-boot env</span></div>
+<span class="out">_firmware-backup-clip.bin.extracted/
+  &boxv;&boxh;&boxh; 6800/   u-boot-lzo.img                   </span><span class="cmt"># bootloader</span><span class="out">
+  &boxv;&boxh;&boxh; 48184/  jffs2-root/                      </span><span class="cmt"># rom config</span><span class="out">
+  &boxv;&boxh;&boxh; 80000/  Linux-3.10.14__isvp_swan_1.0__.bin</span>
+<span class="hi">  &boxv;&boxh;&boxh; 228000/ squashfs-root/                   ← the rootfs</span><span class="out">
+  &boxvr;&boxh;&boxh; 7D8000/ jffs2-root/                      </span><span class="cmt"># overlay</span></div>
         </div>
 
         <div style="display:flex; flex-direction:column; gap:14px;">
@@ -1081,48 +1096,110 @@ code.inline {
   <!-- ========================= NEW · Interesting artifacts ========================= -->
   <section class="slide" data-label="Firmware Artifacts">
     <div class="chrome-top">
-      <span><span class="prompt">$</span> grep -r 'BEGIN.*PRIVATE' squashfs-root/</span>
+      <span><span class="prompt">$</span> grep -r 'http\|aws\|key' squashfs-root/</span>
       <span class="meta">§ 02 · easy wins</span>
     </div>
     <div class="body">
-      <div class="eyebrow">What to look for once you've extracted</div>
+      <div class="eyebrow">What we actually found in <code class="inline">unknown_firmware.bin</code></div>
       <h2 class="h-title">Interesting artifacts &mdash; the easy wins</h2>
-      <div class="h-sub">// the things vendors meant to remove and forgot</div>
+      <div class="h-sub">// real strings from a real flash dump &mdash; nothing fancy, just <code class="inline">cat</code> &middot; <code class="inline">grep</code> &middot; <code class="inline">strings</code></div>
 
-      <div class="row4" style="margin-top:36px;">
-        <div class="card accent-green" style="padding:20px 22px;">
-          <div class="card-label">01 &middot; Strings</div>
-          <h3 class="card-title" style="font-size:24px; margin-bottom:6px;">Hardcoded URLs</h3>
-          <p style="font-size:18px; margin:0;">Cloud endpoints, MQTT brokers, S3 buckets, internal dev domains. <code class="inline">strings</code> + <code class="inline">grep</code>.</p>
+      <div class="row4" style="margin-top:28px;">
+        <div class="card accent-green" style="padding:18px 22px;">
+          <div class="card-label">01 &middot; Identity</div>
+          <h3 class="card-title" style="font-size:22px; margin-bottom:6px;">app.ver gives it away</h3>
+          <p style="font-size:17px; margin:0;"><code class="inline">appver=4.53.9.4352</code>, <code class="inline">gitsha=…-dirty</code> &mdash; we know the build, and that it was shipped from an uncommitted tree.</p>
         </div>
-        <div class="card accent-coral" style="padding:20px 22px;">
-          <div class="card-label">02 &middot; Keys &amp; certs</div>
-          <h3 class="card-title" style="font-size:24px; margin-bottom:6px;">Forgotten secrets</h3>
-          <p style="font-size:18px; margin:0;">Private keys checked in, debug-CA chains, OEM signing keys reused across the fleet.</p>
+        <div class="card accent-blue" style="padding:18px 22px;">
+          <div class="card-label">02 &middot; Cloud topology</div>
+          <h3 class="card-title" style="font-size:22px; margin-bottom:6px;">30+ vendor endpoints</h3>
+          <p style="font-size:17px; margin:0;"><code class="inline">cloud_profile.ini</code> maps the whole backend: api / AI / device / IoT / KVS / event / log services &mdash; with <span class="mono-amber">test &middot; beta &middot; prod</span> variants for each.</p>
         </div>
-        <div class="card accent-amber" style="padding:20px 22px;">
-          <div class="card-label">03 &middot; Debug hooks</div>
-          <h3 class="card-title" style="font-size:24px; margin-bottom:6px;">Hidden interfaces</h3>
-          <p style="font-size:18px; margin:0;">Telnet daemons, dropbear keys, factory test menus, shells gated by an env flag.</p>
+        <div class="card accent-coral" style="padding:18px 22px;">
+          <div class="card-label">03 &middot; 3rd-party SDKs</div>
+          <h3 class="card-title" style="font-size:22px; margin-bottom:6px;">TUTK P2P symbols</h3>
+          <p style="font-size:17px; margin:0;"><code class="inline">TUTK3rdECDHDecodeSecret</code>, token / password handlers &mdash; ThroughTek P2P, well-known CVE history. SDK version pins your attack surface.</p>
         </div>
-        <div class="card accent-blue" style="padding:20px 22px;">
-          <div class="card-label">04 &middot; Configs</div>
-          <h3 class="card-title" style="font-size:24px; margin-bottom:6px;">Build &amp; identity</h3>
-          <p style="font-size:18px; margin:0;">U-Boot env, default creds, build IDs revealing kernel + SoC + sensor exactly.</p>
+        <div class="card accent-amber" style="padding:18px 22px;">
+          <div class="card-label">04 &middot; Layout</div>
+          <h3 class="card-title" style="font-size:22px; margin-bottom:6px;">Two SquashFS = A/B</h3>
+          <p style="font-size:17px; margin:0;">Two identical-sized rootfs at <code class="inline">0x4A0000</code> and <code class="inline">0xA20000</code> &mdash; A/B update scheme. Both worth diffing.</p>
         </div>
       </div>
 
-      <div class="term" style="margin-top:28px;">
+      <div class="term" style="margin-top:22px; flex:1; min-height:0; display:flex; flex-direction:column;">
         <div class="term-head">
           <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-          <span class="title">terminal &middot; the easy grep</span>
+          <span class="title">terminal &middot; real output (auto-scroll &middot; hover to pause)</span>
         </div>
-        <div class="term-body" style="font-size:20px; line-height:1.55;"><span class="prompt">$</span> <span class="cmd">strings -n 12 squashfs-root/usr/bin/iCamera | grep -E 'http|mqtt|api'</span>
-<span class="hi">https://api.&lt;vendor&gt;.com/v1/devices/{id}/heartbeat</span>
-<span class="hi">mqtt://broker.&lt;vendor&gt;.cloud:8883</span>
+        <div class="term-body term-marquee" style="font-size:15px; line-height:1.5; padding:0; flex:1; min-height:0;">
+          <div class="term-scroll" style="padding:16px 22px;"><span class="prompt">$</span> <span class="cmd">cat squashfs-root/bin/app.ver</span>
+<span class="out">[VER]
+appver=4.53.9.4352</span>
+<span class="hi">gitsha=82d16ca9f7-dirty</span><span class="cmt">                       # built from a dirty tree</span>
 
-<span class="prompt">$</span> <span class="cmd">find squashfs-root -name '*.pem' -o -name '*.key'</span>
-<span class="hi">squashfs-root/etc/ssl/private/factory.key</span>      <span class="cmt"># oof</span></div>
+<span class="prompt">$</span> <span class="cmd">cat squashfs-root/etc/cloud_profile.ini | grep Prod</span>
+<span class="hi">CloudProd=api.&lt;vendor&gt;.com</span>
+<span class="hi">AIProd=ai-asm-api.&lt;vendor&gt;.com</span>
+<span class="hi">DeviceProd=device-api.&lt;vendor&gt;.com</span>
+<span class="hi">IOTProd=aws-iot.&lt;vendor&gt;.com</span>
+<span class="hi">KVSServiceProd=kvs-service.&lt;vendor&gt;.com</span>
+<span class="hi">ConfigServiceProd=configservice.&lt;vendor&gt;.com</span>
+<span class="hi">EventServiceProd=event-service.&lt;vendor&gt;.com</span>
+<span class="hi">LogProd=dcl-api.&lt;vendor&gt;.com</span>
+<span class="out">…10+ more, plus test &amp; beta variants</span>
+
+<span class="prompt">$</span> <span class="cmd">strings -n 12 squashfs-root/bin/iCamera | grep -E 'TUTK|password|token' | head</span>
+<span class="hi">TUTK3rdECDHDecodeSecret</span><span class="cmt">                       # ThroughTek P2P SDK</span>
+<span class="out">_handle_change_password_request
+_handle_change_password_request_ack
+_handle_token_request
+_handle_token_delete_request
+&lt;VENDOR&gt;_UploadFirmwareVersion</span>
+
+<span class="prompt">$</span> <span class="cmd">binwalk unknown_firmware.bin | grep -i squash</span>
+<span class="hi">4849664    0x4A0000   SquashFS v4.0, xz, 5.4 MB</span>
+<span class="hi">10616832   0xA20000   SquashFS v4.0, xz, 5.4 MB</span><span class="cmt">     # A/B</span>
+
+<span class="prompt">$</span> <span class="cmd">find squashfs-root -name '*.pem' | wc -l</span>
+<span class="hi">137</span><span class="cmt">                                          # CA bundle, not secrets — verify before getting excited</span>
+
+<span class="cmt">────────────────────────────────────────────────────────────</span>
+<!-- duplicate begins (seamless loop) -->
+<span class="prompt">$</span> <span class="cmd">cat squashfs-root/bin/app.ver</span>
+<span class="out">[VER]
+appver=4.53.9.4352</span>
+<span class="hi">gitsha=82d16ca9f7-dirty</span><span class="cmt">                       # built from a dirty tree</span>
+
+<span class="prompt">$</span> <span class="cmd">cat squashfs-root/etc/cloud_profile.ini | grep Prod</span>
+<span class="hi">CloudProd=api.&lt;vendor&gt;.com</span>
+<span class="hi">AIProd=ai-asm-api.&lt;vendor&gt;.com</span>
+<span class="hi">DeviceProd=device-api.&lt;vendor&gt;.com</span>
+<span class="hi">IOTProd=aws-iot.&lt;vendor&gt;.com</span>
+<span class="hi">KVSServiceProd=kvs-service.&lt;vendor&gt;.com</span>
+<span class="hi">ConfigServiceProd=configservice.&lt;vendor&gt;.com</span>
+<span class="hi">EventServiceProd=event-service.&lt;vendor&gt;.com</span>
+<span class="hi">LogProd=dcl-api.&lt;vendor&gt;.com</span>
+<span class="out">…10+ more, plus test &amp; beta variants</span>
+
+<span class="prompt">$</span> <span class="cmd">strings -n 12 squashfs-root/bin/iCamera | grep -E 'TUTK|password|token' | head</span>
+<span class="hi">TUTK3rdECDHDecodeSecret</span><span class="cmt">                       # ThroughTek P2P SDK</span>
+<span class="out">_handle_change_password_request
+_handle_change_password_request_ack
+_handle_token_request
+_handle_token_delete_request
+&lt;VENDOR&gt;_UploadFirmwareVersion</span>
+
+<span class="prompt">$</span> <span class="cmd">binwalk unknown_firmware.bin | grep -i squash</span>
+<span class="hi">4849664    0x4A0000   SquashFS v4.0, xz, 5.4 MB</span>
+<span class="hi">10616832   0xA20000   SquashFS v4.0, xz, 5.4 MB</span><span class="cmt">     # A/B</span>
+
+<span class="prompt">$</span> <span class="cmd">find squashfs-root -name '*.pem' | wc -l</span>
+<span class="hi">137</span><span class="cmt">                                          # CA bundle, not secrets — verify before getting excited</span>
+
+<span class="cmt">────────────────────────────────────────────────────────────</span>
+</div>
+        </div>
       </div>
     </div>
     <div class="chrome-bot">
@@ -1157,13 +1234,13 @@ code.inline {
           <div class="card-label">The RE Project</div>
           <h3 class="card-title">Reverse-engineer. Rewrite. Set free.</h3>
           <ul>
-            <li>Goal: open-source replacement, modern kernels</li>
-            <li>Binary Ninja + Ghidra + AI-assisted analysis</li>
-            <li>Register-by-register reconstruction of the pipeline</li>
-            <li>Working drivers on 5.x kernels &mdash; and rising</li>
+            <li>Goal: open-source ISP driver &mdash; mainline kernels eventually</li>
+            <li>Binary Ninja or Ghidra + AI-assisted reconstruction, register by register</li>
+            <li><strong>Mostly working on stock 3.10</strong>; mainline port paused mid-way due to time constraints</li>
+            <li>A few tuning bits still need polish &mdash; some sensors near-OEM, others still lagging</li>
           </ul>
           <div class="links" style="margin-top:20px">
-            <a>github.com/opensensor/isp</a>
+            <a href="https://github.com/opensensor/open-tx-isp">https://github.com/opensensor/open-tx-isp</a>
           </div>
         </div>
       </div>
