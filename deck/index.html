@@ -555,11 +555,13 @@ code.inline {
   backdrop-filter: blur(6px);
 }
 .lightbox[data-open] { display: flex; }
-.lightbox img {
+.lightbox img,
+.lightbox video {
   max-width: 100%;
   max-height: 100%;
   border-radius: 8px;
   box-shadow: 0 30px 100px rgba(0,0,0,0.7);
+  background: #000;
 }
 .lightbox .lb-caption {
   position: absolute;
@@ -634,7 +636,7 @@ code.inline {
     <div class="body">
       <div class="eyebrow">Target Rationale</div>
       <h2 class="h-title">Why security cameras?</h2>
-      <div class="h-sub">// some folks have been asking me &mdash; here's the honest answer</div>
+      <div class="h-sub">// some folks have been asking me, and here's the answers</div>
 
       <!-- Personal origin note -->
       <div style="margin-top:32px; padding:22px 28px; background:var(--panel-2); border:1px solid var(--border); border-radius:12px; display:grid; grid-template-columns: 1fr 1.4fr; gap:36px; align-items:start;">
@@ -649,14 +651,14 @@ code.inline {
           <div>
             <div class="mono-green" style="font-size:13px; letter-spacing:0.22em; text-transform:uppercase; margin-bottom:6px;">Background</div>
             <div style="font-size:21px; line-height:1.45; color:var(--text-dim);">
-              Read <em>Linux Device Drivers, 2nd edition</em> in college and shipped real drivers around <span class="mono-green">2006</span> &mdash; then a long break from that world.
+              Around <span class="mono-green">2006</span>, I read <em>Linux Device Drivers, 2nd edition</em> for a college course under the instruction of <span class="mono-green">Prof. Steve Lumetta</span>. We shipped real drivers back then, after which I took a long break.
             </div>
           </div>
         </div>
         <div>
           <div class="mono-amber" style="font-size:13px; letter-spacing:0.22em; text-transform:uppercase; margin-bottom:6px;">Why cameras, why now</div>
           <div style="font-size:21px; line-height:1.45; color:var(--text-dim);">
-            Coming back, I wanted something that would actually challenge me. Cheap IP cameras sit right at the intersection of <span class="mono-green">Linux</span>, <span class="mono-blue">hardware</span>, <span class="mono-amber">DSP</span>, and modern <span class="mono-coral">AI/ML</span> &mdash; an edge-Linux box for less than a nice dinner. I was already buying them and wanted more control over the ones I owned.
+            Embedded security cameras carry far more complexity than their earlier analog counterparts. Cheap IP cameras are right in the intersection of <span class="mono-green">Linux</span>, <span class="mono-blue">hardware</span>, <span class="mono-amber">DSP</span>, with <span class="mono-coral">AI/ML</span> sometimes built in. With units starting at <span class="mono-green">$10</span> they make an attractive research target.
           </div>
         </div>
       </div>
@@ -680,12 +682,18 @@ code.inline {
         <div class="card accent-coral">
           <div class="card-label">04 · Stakes</div>
           <h3 class="card-title" style="font-size:30px">Secure boot trend</h3>
-          <p style="font-size:20px; color:var(--text-dim); margin:0">Vendors are locking down newer models. The clock is ticking.</p>
+          <p style="font-size:20px; color:var(--text-dim); margin:0">Vendors are locking down newer models.</p>
         </div>
       </div>
 
-      <div class="push" style="margin-top:36px; font-family:var(--font-mono); font-size:22px; color:var(--muted);">
-        <span style="color:var(--green)">$</span> cheap · ubiquitous · complex · increasingly hostile to owners.
+      <div class="push" style="margin-top:36px; display:flex; flex-direction:column; gap:14px;">
+        <div style="font-family:var(--font-mono); font-size:22px; color:var(--muted);">
+          <span style="color:var(--green)">$</span> cheap · ubiquitous · complex · increasingly hostile to owners.
+        </div>
+        <div style="padding:18px 24px; background:var(--panel-2); border:1px solid var(--border); border-radius:12px; font-size:20px; line-height:1.5; color:var(--text-dim);">
+          <span class="mono-amber" style="font-size:13px; letter-spacing:0.22em; text-transform:uppercase; margin-right:10px;">The disparity</span>
+          Ten dollars buys a cloud-tethered camera that ignores open standards and phones home to a vendor backend. A few hundred buys an <span class="mono-green">RTSP/ONVIF</span>-compliant device with comparable sensor silicon. <em>Why the gap, when the low-end optics are already this polished?</em>
+        </div>
       </div>
     </div>
     <div class="chrome-bot">
@@ -702,18 +710,18 @@ code.inline {
     </div>
     <div class="body">
       <div class="eyebrow">Chapter 01 · The Primer</div>
-      <h2 class="h-title">What is firmware? What is an SoC?</h2>
+      <h2 class="h-title">What is firmware? What is a SoC?</h2>
       <div class="h-sub">// the terrain we're about to map</div>
 
       <div class="row2" style="margin-top:48px; flex:1; min-height:0;">
         <div class="card accent-green" style="display:flex; flex-direction:column; min-height:0;">
           <div class="card-label">Firmware</div>
-          <h3 class="card-title">Software permanently stored on hardware</h3>
+          <h3 class="card-title">Persistent software that runs the device itself</h3>
           <ul>
             <li>Lives on flash chips &mdash; SPI NOR, SPI NAND, eMMC</li>
-            <li>Layered: <code class="inline">bootloader → kernel → rootfs</code></li>
-            <li>Readable, modifiable, reflashable &mdash; if you can reach it</li>
-            <li>What actually runs when you plug the thing in</li>
+            <li>Layered System: <code class="inline">bootloader → kernel → rootfs</code></li>
+            <li>Readable, modifiable, reflashable &mdash; usually</li>
+            <li>Its what actually runs when you plug the thing in</li>
           </ul>
         </div>
         <div class="card accent-blue" style="display:flex; flex-direction:column; gap:18px; min-height:0;">
@@ -730,7 +738,7 @@ code.inline {
             <li style="font-size:20px; padding:4px 0 4px 24px;">ISP, NPU, crypto engines, GPIO, video encoders</li>
             <li style="font-size:20px; padding:4px 0 4px 24px;">Contains a <strong style="color:var(--blue)">boot ROM</strong> &mdash; immutable mask ROM</li>
             <li style="font-size:20px; padding:4px 0 4px 24px;">OTP fuses carry per-chip secrets &amp; config</li>
-            <li style="font-size:20px; padding:4px 0 4px 24px;">The silicon decides what runs first. You don't.</li>
+            <li style="font-size:20px; padding:4px 0 4px 24px;">What runs first is fixed in silicon at fab time &mdash; not by you.</li>
           </ul>
         </div>
       </div>
@@ -767,7 +775,7 @@ code.inline {
             <div class="img-expand-hint">⤢ click to expand</div>
           </div>
           <ul style="margin:0; padding:0; list-style:none;">
-            <li style="font-size:18px; padding:2px 0 2px 22px;">Small &mdash; 1 to 32 MB typical</li>
+            <li style="font-size:18px; padding:2px 0 2px 22px;">Small &mdash; 8, 16, or 32 MB typical</li>
             <li style="font-size:18px; padding:2px 0 2px 22px;">Execute-in-place (XIP) capable</li>
             <li style="font-size:18px; padding:2px 0 2px 22px;">No bad blocks &mdash; what you read is what's there</li>
             <li style="font-size:18px; padding:2px 0 2px 22px;">Filesystem: <code class="inline">SquashFS</code> or raw blobs</li>
@@ -826,7 +834,7 @@ code.inline {
     </div>
     <div class="body">
       <div class="eyebrow">Chapter 02 · Getting the bits off</div>
-      <h2 class="h-title">Firmware extraction 101 &mdash; the clip methods</h2>
+      <h2 class="h-title">Firmware extraction 101 &mdash; the clip method</h2>
       <div class="h-sub">// clip onto the flash, read everything</div>
 
       <div style="margin-top:48px; display:grid; grid-template-columns: 1.2fr 1fr; gap:40px; flex:1;">
@@ -835,34 +843,36 @@ code.inline {
             <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
             <span class="title">terminal · flash_extraction</span>
           </div>
-          <div class="term-body"><span class="prompt">$</span> <span class="cmd">flashrom -p ch341a_spi -r dump.bin</span>
-<span class="out">Reading flash... done. (8 MiB)</span>
+          <div class="term-body"><span class="prompt">$</span> <span class="cmd">snander -i</span>                                  <span class="cmt"># detect the chip</span>
+<span class="out">XT25F128B (JEDEC 0x0B4018, 16 MiB)</span>
 
-<span class="prompt">$</span> <span class="cmd">SNANDer -r nand_dump.bin</span>
-<span class="out">NAND: GD5F1GQ4UBYIG (128 MiB)</span>
+<span class="prompt">$</span> <span class="cmd">sudo snander -r firmware-backup-clip.bin</span>
+<span class="prompt">$</span> <span class="cmd">sudo snander -r firmware-backup-clip-2.bin</span>   <span class="cmt"># read again — trust nothing</span>
+<span class="prompt">$</span> <span class="cmd">sha256sum firmware-backup-clip*.bin</span>
+<span class="hi">8b638338ef84713f13e7cde9a53d557f38e3213c7739b5fd81da16526c9aaf1f</span><span class="out">  firmware-backup-clip.bin</span>
+<span class="hi">8b638338ef84713f13e7cde9a53d557f38e3213c7739b5fd81da16526c9aaf1f</span><span class="out">  firmware-backup-clip-2.bin</span>
+<span class="cmt"># checksums match → verified firmware copy</span>
 
-<span class="prompt">$</span> <span class="cmd">scriba read 0x0 0x800000 spi_dump.bin</span>
-
-<span class="cmt"># clip onto the flash chip, read the contents,</span>
-<span class="cmt"># and you have the entire firmware image.</span>
-<span class="hi">#                      ↑ the whole device, in a file.</span></div>
+<span class="cmt"># SPI NOR alt pathway (example)</span>
+<span class="prompt">$</span> <span class="cmd">flashrom -p ch341a_spi -r firmware-backup-flashrom.bin</span></div>
         </div>
 
         <div style="display:flex; flex-direction:column; gap:18px;">
           <div class="card accent-amber">
             <div class="card-label">Rig</div>
-            <h3 class="card-title" style="font-size:30px">SOIC-8 / SOIC-16 clip</h3>
-            <p style="font-size:20px; margin:0">A spring-loaded clothespin for your motherboard.</p>
+            <h3 class="card-title" style="font-size:28px">CH341A + SOIC-8/16 clip</h3>
+            <p style="font-size:18px; margin:0">Cheap USB EEPROM programmer, spring-loaded clip onto the live chip. Software: <span class="mono-amber">SNANDer</span> &middot; <span class="mono-amber">scriba</span> &middot; <span class="mono-amber">ch341prog</span> &middot; <span class="mono-amber">flashrom</span>.</p>
+            <p style="font-size:15px; margin:8px 0 0; color:var(--text-dim); font-style:italic;"><span class="mono-amber">scriba</span> is a fork of <span class="mono-amber">SNANDer</span> &mdash; sometimes carries additional flash chip identifiers, so try it if your chip isn't recognized.</p>
           </div>
-          <div class="card">
-            <div class="card-label">Targets</div>
-            <h3 class="card-title" style="font-size:30px">SPI NOR · SPI NAND</h3>
-            <p style="font-size:20px; margin:0">Different protocols, same idea: read the whole chip into a file.</p>
+          <div class="card accent-coral">
+            <div class="card-label">Heads-up</div>
+            <h3 class="card-title" style="font-size:28px">The 3.3V trap</h3>
+            <p style="font-size:18px; margin:0">Early <span class="mono-coral">CH341A</span> boards drive data lines at <strong>5V</strong> even with the 3.3V jumper set. Mod the board (tie the on-board regulator to pin 9) or fry your 3.3V flash.</p>
           </div>
           <div class="card accent-green">
             <div class="card-label">Output</div>
-            <h3 class="card-title" style="font-size:30px">Full firmware dump</h3>
-            <p style="font-size:20px; margin:0">Bootloader, kernel, rootfs, keys, configs. Everything.</p>
+            <h3 class="card-title" style="font-size:28px">Full firmware dump</h3>
+            <p style="font-size:18px; margin:0">Bootloader, kernel, rootfs, keys, configs &mdash; read twice, checksum, then trust it.</p>
           </div>
         </div>
       </div>
@@ -873,57 +883,79 @@ code.inline {
     </div>
   </section>
 
-  <!-- ========================= SLIDE 6 — Ingenic case study ========================= -->
-  <section class="slide" data-label="Ingenic Case Study">
+  <!-- ========================= SLIDE 6 — Ingenic ecosystem + clip demo ========================= -->
+  <section class="slide" data-label="Ingenic & Thingino">
     <div class="chrome-top">
       <span><span class="prompt">$</span> cat /proc/cpuinfo</span>
-      <span class="meta">§ 02 · target</span>
+      <span class="meta">§ 02 · ecosystem</span>
     </div>
     <div class="body">
-      <div class="eyebrow">Meet the target</div>
-      <h2 class="h-title">Ingenic &mdash; a perfect case study</h2>
-      <div class="h-sub">// excellent image quality · cheap devices · FCC teardowns on public record</div>
+      <div class="eyebrow">Why these chips</div>
+      <h2 class="h-title">Ingenic &mdash; capable silicon, an open community</h2>
+      <div class="h-sub">// strong image quality &middot; affordable hardware &middot; public FCC teardowns &middot; active alt-firmware community</div>
 
-      <div class="tbl" style="margin-top:48px; font-size:20px;">
-        <div class="row head" style="grid-template-columns: 1fr 1.4fr 2.6fr;">
-          <div>SoC</div><div>CPU</div><div>Typical Devices</div>
+      <!-- Top strip: SoC table + stacked XBurst note & Thingino info -->
+      <div style="margin-top:22px; display:grid; grid-template-columns: auto 1fr; gap:24px; align-items:stretch;">
+        <div class="tbl" style="font-size:16px;">
+          <div class="row head" style="grid-template-columns: 1.5fr 1.5fr;">
+            <div>SoC family</div><div>CPU</div>
+          </div>
+          <div class="row" style="grid-template-columns: 1.5fr 1.5fr;">
+            <div class="mono-green" style="font-weight:600">T21 / T23 / T31</div>
+            <div>XBurst1 (MIPS32)</div>
+          </div>
+          <div class="row alt" style="grid-template-columns: 1.5fr 1.5fr;">
+            <div class="mono-green" style="font-weight:600">T40 / T41 / A1</div>
+            <div>XBurst2 (MIPS64)</div>
+          </div>
         </div>
-        <div class="row" style="grid-template-columns: 1fr 1.4fr 2.6fr;">
-          <div class="mono-green" style="font-weight:600">T21 / T23</div>
-          <div>XBurst1 (MIPS)</div>
-          <div>Budget IP cameras</div>
-        </div>
-        <div class="row alt" style="grid-template-columns: 1fr 1.4fr 2.6fr;">
-          <div class="mono-green" style="font-weight:600">T31</div>
-          <div>XBurst1 (MIPS)</div>
-          <div>Video doorbells · mid-range cams</div>
-        </div>
-        <div class="row" style="grid-template-columns: 1fr 1.4fr 2.6fr;">
-          <div class="mono-green" style="font-weight:600">T40 / T41</div>
-          <div>XBurst2 (MIPS)</div>
-          <div>Pan/tilt cams · newer devices</div>
-        </div>
-        <div class="row alt" style="grid-template-columns: 1fr 1.4fr 2.6fr;">
-          <div class="mono-green" style="font-weight:600">A1</div>
-          <div>XBurst2 (MIPS)</div>
-          <div>NVR-style devices</div>
+        <div style="display:flex; flex-direction:column; gap:8px; align-self:stretch;">
+          <div style="flex:1; padding:10px 14px; border-left:3px solid var(--blue); background:var(--panel-2); border-radius:6px; font-size:15px; color:var(--text-dim); line-height:1.45; display:flex; align-items:center;">
+            <div>
+              <span class="mono-blue" style="font-weight:600;">XBurst1</span> is a 32-bit MIPS core; <span class="mono-blue" style="font-weight:600;">XBurst2</span> is the 64-bit successor.
+            </div>
+          </div>
+          <div style="flex:1; padding:10px 14px; border-left:3px solid var(--green); background:var(--panel-2); border-radius:6px; font-size:15px; color:var(--text-dim); line-height:1.45; display:flex; align-items:center; justify-content:space-between; gap:14px;">
+            <div>
+              <span class="mono-green" style="font-weight:600; margin-right:8px;">Thingino</span>
+              open-source Linux rebuild for these cameras
+            </div>
+            <div class="mono-green" style="font-size:13px; opacity:0.85; white-space:nowrap;">
+              thingino.com &nbsp;&middot;&nbsp; github.com/themactep/thingino-firmware
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="push card accent-green" style="margin-top:40px; display:flex; align-items:center; justify-content:space-between; padding:22px 32px;">
-        <div>
-          <div class="card-label" style="margin:0">Open source alternative firmware</div>
-          <div style="font-family:var(--font-sans); font-size:28px; color:var(--text); margin-top:4px;">Thingino &mdash; a full Linux rebuild for these cameras</div>
-        </div>
-        <div class="mono-green" style="font-size:22px; text-align:right; line-height:1.35;">
-          thingino.com<br>
-          <span style="font-size:18px;">github.com/themactep/thingino-firmware →</span>
+      <!-- Wide demo area: scriba clip-method video (left, 4x) + CH341A clip-method photo (right) -->
+      <div class="card accent-amber" style="margin-top:16px; flex:1; display:flex; flex-direction:column; gap:10px; padding:12px 14px; min-height:0;">
+        <div class="card-label" style="margin:0">Demo &middot; clip-on flash &middot; click to expand</div>
+        <div style="flex:1; display:grid; grid-template-columns: 1fr 1fr; gap:14px; min-height:0;">
+          <div class="img-expand"
+               data-video="videos/scriba-clip-method.mp4"
+               data-caption="scriba &mdash; clip-on SPI flash, reading the device (4&times; speed)"
+               data-playback-rate="4"
+               style="position:relative; border:1px solid var(--amber); border-radius:8px; background:#000; min-height:0; overflow:hidden;">
+            <video autoplay muted loop playsinline
+                   onloadedmetadata="this.playbackRate=4"
+                   src="videos/scriba-clip-method.mp4"
+                   style="width:100%; height:100%; object-fit:contain; display:block;"></video>
+            <div style="position:absolute; top:8px; left:8px; padding:3px 9px; background:rgba(245,165,36,0.9); color:#0A0D12; font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:0.04em; border-radius:4px;">4&times; SPEED</div>
+            <div class="img-expand-hint">&#10138; click to expand</div>
+          </div>
+          <div class="img-expand"
+               data-src="photos/ch341a-clip-method.jpg"
+               data-caption="CH341A programmer + SOIC clip on the flash chip"
+               style="border:1px solid var(--amber); border-radius:8px; background:#000; min-height:0; overflow:hidden;">
+            <img src="photos/ch341a-clip-method.jpg" alt="CH341A programmer with SOIC clip on the flash chip" style="width:100%; height:100%; object-fit:contain; display:block;">
+            <div class="img-expand-hint">&#10138; click to expand</div>
+          </div>
         </div>
       </div>
     </div>
     <div class="chrome-bot">
       <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page">·</span>
+      <span class="page">&middot;</span>
     </div>
   </section>
 
@@ -938,19 +970,19 @@ code.inline {
       <h2 class="h-title">USB extraction &mdash; when devices cooperate</h2>
       <div class="h-sub">// some SoCs have a built-in boot / recovery mode; it's usually a gift</div>
 
-      <div class="row2" style="margin-top:56px; flex:1;">
+      <div class="row2" style="margin-top:32px; flex:1; min-height:0;">
         <div style="display:flex; flex-direction:column; gap:22px;">
           <div class="card">
             <div class="card-label">Mechanism</div>
-            <h3 class="card-title" style="font-size:32px">Short a pin. Plug in USB.</h3>
-            <p>Boot ROM drops into a recovery protocol. No physical clip, no desoldering, no scorched PCB.</p>
+            <h3 class="card-title" style="font-size:32px">Short pins 5-6 while plugging in USB.</h3>
+            <p>If the device wires USB through to the SoC's PHY pins, the host enumerates the boot ROM, which drops into its recovery-protocol bootloader.</p>
           </div>
           <div class="card accent-blue">
             <div class="card-label">Ingenic</div>
             <h3 class="card-title" style="font-size:32px">The <span class="mono-blue">cloner</span> protocol</h3>
             <p>Read flash, write flash, execute code &mdash; all over USB. Intended for factory reflash. We have other plans.</p>
           </div>
-          <div class="pill green"><span class="dot"></span>Foreshadowing &mdash; this same protocol may be able to give us additional information.</div>
+          <div class="pill green"><span class="dot"></span>Foreshadowing &mdash; this same protocol may reveal other information as well.</div>
         </div>
 
         <div class="term" style="align-self:stretch;">
@@ -958,16 +990,24 @@ code.inline {
             <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
             <span class="title">usb · cloner</span>
           </div>
-          <div class="term-body"><span class="cmt"># short BOOT_SEL to GND, plug USB</span>
-<span class="prompt">$</span> <span class="cmd">lsusb | grep Ingenic</span>
-<span class="out">Bus 001 Device 042: </span><span class="hi">ID a108:1000 Ingenic T41</span>
+          <div class="term-body" style="font-size:16px; line-height:1.5; padding:18px 22px;"><span class="cmt"># short BOOT_SEL to GND, plug USB</span>
+<span class="prompt">$</span> <span class="cmd">thingino-cloner -l</span>
+<span class="out">thingino-cloner 0.7.10</span>
+<span class="out">Found 1 device(s):</span>
+<span class="out">Index | Vendor | Product | Stage   | SoC</span>
+<span class="out">    0 | 0xA108 | 0xC309  | </span><span class="hi">bootrom</span><span class="out"> | </span><span class="hi">t31x</span>
 
-<span class="prompt">$</span> <span class="cmd">cloner --read 0x0 0x800000 flash.bin</span>
-<span class="out">Reading    [====================] 100%</span>
-<span class="out">Wrote 8388608 bytes to flash.bin</span>
+<span class="prompt">$</span> <span class="cmd">sudo thingino-cloner -r firmware-backup.bin</span>
+<span class="out">Device is in bootrom stage. Bootstrapping...</span>
+<span class="out">  Detected: t31zx (magic 'T 3 1 V ')</span>
+<span class="out">  Loading SPL (10092 B) / U-Boot (390532 B)... ok</span>
+<span class="out">Bootstrap complete.</span>
 
-<span class="prompt">$</span> <span class="cmd">file flash.bin</span>
-<span class="out">flash.bin: </span><span class="hi">u-boot + kernel + rootfs</span></div>
+<span class="cmt">================ FIRMWARE READ ================</span>
+<span class="out">  Flash JEDEC ID: 0x0B4018 → </span><span class="hi">XT25F128B (16 MB)</span>
+<span class="out">  Reading 16777216 bytes in 1024KB chunks...</span>
+<span class="out">  Progress: 16/16 chunks (100%), 16.00 MB read</span>
+<span class="out">  Output: </span><span class="hi">firmware-backup.bin (16.00 MB)</span></div>
         </div>
       </div>
     </div>
@@ -2901,21 +2941,70 @@ suggest tightening our gain table writer and adding the same bounds check.</span
     overlay.innerHTML =
       '<button class="lb-close" type="button" aria-label="Close">&times;</button>' +
       '<img alt="">' +
+      '<video controls playsinline style="display:none;"></video>' +
       '<div class="lb-caption"></div>';
     document.body.appendChild(overlay);
     const lbImg = overlay.querySelector('img');
+    const lbVideo = overlay.querySelector('video');
     const lbCaption = overlay.querySelector('.lb-caption');
     const lbClose = overlay.querySelector('.lb-close');
 
-    function openLb(src, caption) {
-      if (!src) return;
-      lbImg.src = src;
+    let sourceVideo = null;          // inline <video> we expanded from
+    let sourceWasPlaying = false;    // so we can resume it on close
+
+    function openLb(src, caption, videoSrc, playbackRate, srcVideo) {
+      if (!src && !videoSrc) return;
       lbCaption.textContent = caption || '';
+      if (videoSrc) {
+        lbImg.style.display = 'none';
+        lbImg.removeAttribute('src');
+        lbVideo.style.display = 'block';
+        lbVideo.src = videoSrc;
+        var rate = parseFloat(playbackRate);
+        var applyRate = (isFinite(rate) && rate > 0) ? rate : 1;
+        var startTime = (srcVideo && isFinite(srcVideo.currentTime)) ? srcVideo.currentTime : 0;
+        lbVideo.playbackRate = applyRate;
+        lbVideo.addEventListener('loadedmetadata', function onMeta() {
+          lbVideo.playbackRate = applyRate;
+          try { lbVideo.currentTime = startTime; } catch (e) { /* seek may fail before ready */ }
+          lbVideo.removeEventListener('loadedmetadata', onMeta);
+        });
+        // Pause the inline preview so we don't double-decode while expanded.
+        if (srcVideo) {
+          sourceVideo = srcVideo;
+          sourceWasPlaying = !srcVideo.paused;
+          try { srcVideo.pause(); } catch (e) {}
+        } else {
+          sourceVideo = null;
+          sourceWasPlaying = false;
+        }
+        lbVideo.play().catch(function() { /* autoplay may be blocked; controls remain */ });
+      } else {
+        lbVideo.pause();
+        lbVideo.removeAttribute('src');
+        lbVideo.style.display = 'none';
+        lbImg.style.display = 'block';
+        lbImg.src = src;
+        sourceVideo = null;
+        sourceWasPlaying = false;
+      }
       overlay.setAttribute('data-open', '');
     }
     function closeLb() {
       overlay.removeAttribute('data-open');
       lbImg.removeAttribute('src');
+      // Sync inline preview back to where the lightbox left off, then resume.
+      if (sourceVideo) {
+        var endTime = lbVideo.currentTime;
+        try { if (isFinite(endTime)) sourceVideo.currentTime = endTime; } catch (e) {}
+        if (sourceWasPlaying) {
+          sourceVideo.play().catch(function() { /* autoplay restrictions */ });
+        }
+      }
+      sourceVideo = null;
+      sourceWasPlaying = false;
+      lbVideo.pause();
+      lbVideo.removeAttribute('src');
     }
 
     // Capture phase so this runs before deck-stage tap-zone handlers.
@@ -2925,7 +3014,8 @@ suggest tightening our gain table writer and adding the same bounds check.</span
         e.preventDefault();
         e.stopPropagation();
         const inner = trigger.querySelector('img');
-        openLb(trigger.dataset.src || (inner && inner.src), trigger.dataset.caption || '');
+        const innerVideo = trigger.querySelector('video');
+        openLb(trigger.dataset.src || (inner && inner.src), trigger.dataset.caption || '', trigger.dataset.video || '', trigger.dataset.playbackRate || '', innerVideo);
         return;
       }
       if (overlay.hasAttribute('data-open')) {
