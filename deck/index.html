@@ -1251,59 +1251,12 @@ _handle_token_delete_request
             <li><strong>Mostly working on stock 3.10</strong>; mainline port paused mid-way due to time constraints</li>
             <li>A few tuning bits still need polish &mdash; some sensors near-OEM, others still lagging</li>
           </ul>
-          <div class="links" style="margin-top:20px">
-            <a href="https://github.com/opensensor/open-tx-isp">https://github.com/opensensor/open-tx-isp</a>
-          </div>
         </div>
       </div>
     </div>
     <div class="chrome-bot">
       <span class="meta">bsides_maine_2026 // matt davis</span>
       <span class="page"><span style="color:var(--green)">08</span><span class="sep">/</span>21</span>
-    </div>
-  </section>
-
-  <!-- ========================= NEW · open-tx-isp methodology ========================= -->
-  <section class="slide" data-label="open-tx-isp method">
-    <div class="chrome-top">
-      <span><span class="prompt">$</span> cat docs/methodology.md</span>
-      <span class="meta">§ 02 &middot; how</span>
-    </div>
-    <div class="body">
-      <div class="eyebrow">How we actually reverse it</div>
-      <h2 class="h-title">Methodology &mdash; smartdiff, LLMs, and a tracer</h2>
-      <div class="h-sub">// the OEM blob is the spec &middot; smartdiff narrows the search &middot; the silicon is the judge</div>
-
-      <div class="row4" style="margin-top:36px;">
-        <div class="card accent-blue" style="padding:22px 24px;">
-          <div class="card-label">01 &middot; Decompose</div>
-          <h3 class="card-title" style="font-size:24px; margin-bottom:6px;">smartdiff MCP over HLIL</h3>
-          <p style="font-size:18px; margin:0;">Point smartdiff at OEM <code class="inline">tx-isp-t31.ko</code> vs our build via Binary Ninja MCP. Get a ranked list of changed functions and function-by-function HLIL &mdash; the search is bounded before a human reads anything.</p>
-        </div>
-        <div class="card accent-green" style="padding:22px 24px;">
-          <div class="card-label">02 &middot; Implement</div>
-          <h3 class="card-title" style="font-size:24px; margin-bottom:6px;">LLMs write the equivalent</h3>
-          <p style="font-size:18px; margin:0;">Feed the HLIL + behavioral delta to the model; it drafts the clean-room C against the vendor <code class="inline">3.10.14</code> tree. <code class="inline">libimp.so</code> stays untouched &mdash; ABI parity is the only acceptance test.</p>
-        </div>
-        <div class="card accent-amber" style="padding:22px 24px;">
-          <div class="card-label">03 &middot; Verify</div>
-          <h3 class="card-title" style="font-size:24px; margin-bottom:6px;">Tracer driver vs OEM hardware state</h3>
-          <p style="font-size:18px; margin:0;">In-tree <code class="inline">driver/tx-isp-trace.c</code> + ftrace/kprobes captures every MMIO write, ioctl arg, and IRQ. Diff our register state against the OEM trace &mdash; the silicon votes on whether we got it right.</p>
-        </div>
-        <div class="card accent-coral" style="padding:22px 24px;">
-          <div class="card-label">04 &middot; Reality</div>
-          <h3 class="card-title" style="font-size:24px; margin-bottom:6px;">A tall headwall before first frame</h3>
-          <p style="font-size:18px; margin:0;">Time-intensive. Months of grinding before activation and a streaming image at all &mdash; and image quality is still being chased (anchor: last "crisp image" commit, block mask <code class="inline">0xDD04</code>).</p>
-        </div>
-      </div>
-
-      <div class="push" style="margin-top:24px; padding:16px 22px; background:var(--panel); border:1px dashed var(--border-2); border-radius:10px; font-family:var(--font-mono); font-size:18px; color:var(--text-dim);">
-        <span style="color:var(--green)">&rarr;</span> smartdiff <span class="mono-green">narrows the search</span> &middot; the LLM <span class="mono-green">does the typing</span> &middot; the tracer <span class="mono-green">keeps us honest</span>. The OEM blob's runtime behavior is its de facto spec.
-      </div>
-    </div>
-    <div class="chrome-bot">
-      <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page">&middot;</span>
     </div>
   </section>
 
@@ -1472,6 +1425,50 @@ _handle_token_delete_request
             <a href="https://github.com/opensensor/open-tx-isp">github.com/opensensor/open-tx-isp</a>
           </div>
         </div>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page">&middot;</span>
+    </div>
+  </section>
+
+  <!-- ========================= NEW · open-tx-isp methodology ========================= -->
+  <section class="slide" data-label="open-tx-isp method">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> cat docs/methodology.md</span>
+      <span class="meta">§ 02 &middot; how</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">How we actually reverse it</div>
+      <h2 class="h-title">Methodology &mdash; smartdiff, LLMs, and a tracer</h2>
+      <div class="h-sub">// the OEM blob is the spec &middot; smartdiff narrows the search &middot; the silicon is the judge</div>
+
+      <div class="row4" style="margin-top:36px;">
+        <div class="card accent-blue" style="padding:22px 24px;">
+          <div class="card-label">01 &middot; Decompose</div>
+          <h3 class="card-title" style="font-size:24px; margin-bottom:6px;">smartdiff MCP over HLIL</h3>
+          <p style="font-size:18px; margin:0;">Point smartdiff at OEM <code class="inline">tx-isp-t31.ko</code> vs our build via Binary Ninja MCP. Get a ranked list of changed functions and function-by-function HLIL &mdash; the search is bounded before a human reads anything.</p>
+        </div>
+        <div class="card accent-green" style="padding:22px 24px;">
+          <div class="card-label">02 &middot; Implement</div>
+          <h3 class="card-title" style="font-size:24px; margin-bottom:6px;">LLMs write the equivalent</h3>
+          <p style="font-size:18px; margin:0;">Feed the HLIL + behavioral delta to the model; it drafts the clean-room C against the vendor <code class="inline">3.10.14</code> tree. <code class="inline">libimp.so</code> stays untouched &mdash; ABI parity is the only acceptance test.</p>
+        </div>
+        <div class="card accent-amber" style="padding:22px 24px;">
+          <div class="card-label">03 &middot; Verify</div>
+          <h3 class="card-title" style="font-size:24px; margin-bottom:6px;">Tracer driver vs OEM hardware state</h3>
+          <p style="font-size:18px; margin:0;">In-tree <code class="inline">driver/tx-isp-trace.c</code> + ftrace/kprobes captures every MMIO write, ioctl arg, and IRQ. Diff our register state against the OEM trace &mdash; the silicon votes on whether we got it right.</p>
+        </div>
+        <div class="card accent-coral" style="padding:22px 24px;">
+          <div class="card-label">04 &middot; Reality</div>
+          <h3 class="card-title" style="font-size:24px; margin-bottom:6px;">A tall headwall before first frame</h3>
+          <p style="font-size:18px; margin:0;">Time-intensive. Months of grinding before activation and a streaming image at all &mdash; and image quality is still being chased (anchor: last "crisp image" commit, block mask <code class="inline">0xDD04</code>).</p>
+        </div>
+      </div>
+
+      <div class="push" style="margin-top:24px; padding:16px 22px; background:var(--panel); border:1px dashed var(--border-2); border-radius:10px; font-family:var(--font-mono); font-size:18px; color:var(--text-dim);">
+        <span style="color:var(--green)">&rarr;</span> smartdiff <span class="mono-green">narrows the search</span> &middot; the LLM <span class="mono-green">does the typing</span> &middot; the tracer <span class="mono-green">keeps us honest</span>. The OEM blob's runtime behavior is its de facto spec.
       </div>
     </div>
     <div class="chrome-bot">
