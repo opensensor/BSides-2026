@@ -718,14 +718,20 @@ code.inline {
 
   <!-- ========================= SLIDE 3 — Firmware/SoC ========================= -->
   <section class="slide" data-label="Firmware & SoC">
+    <style>
+      section[data-label="Firmware & SoC"] .card.accent-blue li::before {
+        font-size: 20px;
+        top: 3px;
+      }
+    </style>
     <div class="chrome-top">
       <span><span class="prompt">$</span> man firmware_soc<span class="cursor"></span></span>
       <span class="meta">§ 01 · primer</span>
     </div>
     <div class="body">
       <div class="eyebrow">Chapter 01 · The Primer</div>
-      <h2 class="h-title">What is firmware? What is a SoC?</h2>
-      <div class="h-sub">// the terrain we're about to map</div>
+      <h2 class="h-title" style="font-size:80px;">What is firmware? What is a SoC?</h2>
+      <div class="h-sub" style="font-size:19px;">// the terrain we're about to map</div>
 
       <div class="row2" style="margin-top:48px; flex:1; min-height:0;">
         <div class="card accent-green" style="display:flex; flex-direction:column; min-height:0;">
@@ -765,6 +771,12 @@ code.inline {
 
   <!-- ========================= SLIDE 4 — NAND vs NOR ========================= -->
   <section class="slide" data-label="NAND vs NOR">
+    <style>
+      section[data-label="NAND vs NOR"] .card li::before {
+        font-size: 18px;
+        top: 1px;
+      }
+    </style>
     <div class="chrome-top">
       <span><span class="prompt">$</span> man flash --types</span>
       <span class="meta">§ 02 · flash storage</span>
@@ -1251,51 +1263,42 @@ _handle_token_delete_request
     </div>
   </section>
 
-  <!-- ========================= NEW · open-tx-isp intro ========================= -->
-  <section class="slide" data-label="open-tx-isp">
+  <!-- ========================= NEW · open-tx-isp methodology ========================= -->
+  <section class="slide" data-label="open-tx-isp method">
     <div class="chrome-top">
-      <span><span class="prompt">$</span> git clone https://github.com/opensensor/open-tx-isp</span>
-      <span class="meta">§ 02 &middot; reclaim the ISP</span>
+      <span><span class="prompt">$</span> cat docs/methodology.md</span>
+      <span class="meta">§ 02 &middot; how</span>
     </div>
     <div class="body">
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:32px;">
-        <div>
-          <div class="eyebrow">Replacing the closed blob</div>
-          <h2 class="h-title">open-tx-isp &mdash; clean-room ISP driver</h2>
-          <div class="h-sub">// the only way out of the 3.10 / 4.4 trap is to replace the blob</div>
+      <div class="eyebrow">How we actually reverse it</div>
+      <h2 class="h-title">Methodology &mdash; smartdiff, LLMs, and a tracer</h2>
+      <div class="h-sub">// the OEM blob is the spec &middot; smartdiff narrows the search &middot; the silicon is the judge</div>
+
+      <div class="row4" style="margin-top:36px;">
+        <div class="card accent-blue" style="padding:22px 24px;">
+          <div class="card-label">01 &middot; Decompose</div>
+          <h3 class="card-title" style="font-size:24px; margin-bottom:6px;">smartdiff MCP over HLIL</h3>
+          <p style="font-size:18px; margin:0;">Point smartdiff at OEM <code class="inline">tx-isp-t31.ko</code> vs our build via Binary Ninja MCP. Get a ranked list of changed functions and function-by-function HLIL &mdash; the search is bounded before a human reads anything.</p>
         </div>
-        <div class="img-expand"
-             data-src="photos/ingenic_isp.webp"
-             data-caption="open-tx-isp mascot &mdash; investigating closed firmware, one ioctl at a time"
-             style="width:140px; height:140px; flex:0 0 auto; background:transparent; border-color:rgba(0,227,140,0.25);">
-          <img src="photos/ingenic_isp.webp" alt="open-tx-isp mascot — penguin detective with magnifying glass and IP camera" style="object-fit:contain;">
+        <div class="card accent-green" style="padding:22px 24px;">
+          <div class="card-label">02 &middot; Implement</div>
+          <h3 class="card-title" style="font-size:24px; margin-bottom:6px;">LLMs write the equivalent</h3>
+          <p style="font-size:18px; margin:0;">Feed the HLIL + behavioral delta to the model; it drafts the clean-room C against the vendor <code class="inline">3.10.14</code> tree. <code class="inline">libimp.so</code> stays untouched &mdash; ABI parity is the only acceptance test.</p>
+        </div>
+        <div class="card accent-amber" style="padding:22px 24px;">
+          <div class="card-label">03 &middot; Verify</div>
+          <h3 class="card-title" style="font-size:24px; margin-bottom:6px;">Tracer driver vs OEM hardware state</h3>
+          <p style="font-size:18px; margin:0;">In-tree <code class="inline">driver/tx-isp-trace.c</code> + ftrace/kprobes captures every MMIO write, ioctl arg, and IRQ. Diff our register state against the OEM trace &mdash; the silicon votes on whether we got it right.</p>
+        </div>
+        <div class="card accent-coral" style="padding:22px 24px;">
+          <div class="card-label">04 &middot; Reality</div>
+          <h3 class="card-title" style="font-size:24px; margin-bottom:6px;">A tall headwall before first frame</h3>
+          <p style="font-size:18px; margin:0;">Time-intensive. Months of grinding before activation and a streaming image at all &mdash; and image quality is still being chased (anchor: last "crisp image" commit, block mask <code class="inline">0xDD04</code>).</p>
         </div>
       </div>
 
-      <div class="row2" style="margin-top:36px; flex:1; min-height:0;">
-        <div class="card accent-coral" style="padding:24px 28px;">
-          <div class="card-label">Why it has to exist</div>
-          <h3 class="card-title">The blob is the lock</h3>
-          <ul>
-            <li>Every Ingenic camera ships a closed <code class="inline">tx-isp-t31.ko</code> + <code class="inline">libimp.so</code></li>
-            <li>Compiled against the vendor's <code class="inline">3.10.14</code> tree &mdash; binary porting forward is impractical</li>
-            <li>No replacement &rArr; no kernel upgrades for the whole device class</li>
-            <li>OEM blob is the authoritative reference for register sequencing &amp; ABI</li>
-          </ul>
-        </div>
-        <div class="card accent-green" style="padding:24px 28px;">
-          <div class="card-label">What we're building</div>
-          <h3 class="card-title">Behavioral equivalent of the OEM driver</h3>
-          <ul>
-            <li>Target: T31 today (Wyze Cam 3 class) &mdash; architecture-similar T-series next</li>
-            <li>Goal: <code class="inline">libimp.so</code> runs <strong>unmodified</strong> against the open driver</li>
-            <li>Vendor <code class="inline">3.10.14</code> kernel today; mainline port paused mid-way</li>
-            <li><strong>GPLv3-licensed</strong>, open development, in-tree RE docs, no NDAs</li>
-          </ul>
-          <div class="links" style="margin-top:14px;">
-            <a href="https://github.com/opensensor/open-tx-isp">github.com/opensensor/open-tx-isp</a>
-          </div>
-        </div>
+      <div class="push" style="margin-top:24px; padding:16px 22px; background:var(--panel); border:1px dashed var(--border-2); border-radius:10px; font-family:var(--font-mono); font-size:18px; color:var(--text-dim);">
+        <span style="color:var(--green)">&rarr;</span> smartdiff <span class="mono-green">narrows the search</span> &middot; the LLM <span class="mono-green">does the typing</span> &middot; the tracer <span class="mono-green">keeps us honest</span>. The OEM blob's runtime behavior is its de facto spec.
       </div>
     </div>
     <div class="chrome-bot">
@@ -1424,6 +1427,59 @@ _handle_token_delete_request
     </div>
   </section>
 
+  <!-- ========================= NEW · open-tx-isp intro ========================= -->
+  <section class="slide" data-label="open-tx-isp">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> git clone https://github.com/opensensor/open-tx-isp</span>
+      <span class="meta">§ 02 &middot; reclaim the ISP</span>
+    </div>
+    <div class="body">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:32px;">
+        <div>
+          <div class="eyebrow">Replacing the closed blob</div>
+          <h2 class="h-title">open-tx-isp &mdash; clean-room ISP driver</h2>
+          <div class="h-sub">// the only way out of the 3.10 / 4.4 trap is to replace the blob</div>
+        </div>
+        <div class="img-expand"
+             data-src="photos/ingenic_isp.webp"
+             data-caption="open-tx-isp mascot &mdash; investigating closed firmware, one ioctl at a time"
+             style="width:140px; height:140px; flex:0 0 auto; background:transparent; border-color:rgba(0,227,140,0.25);">
+          <img src="photos/ingenic_isp.webp" alt="open-tx-isp mascot — penguin detective with magnifying glass and IP camera" style="object-fit:contain;">
+        </div>
+      </div>
+
+      <div class="row2" style="margin-top:36px; flex:1; min-height:0;">
+        <div class="card accent-coral" style="padding:24px 28px;">
+          <div class="card-label">Why it has to exist</div>
+          <h3 class="card-title">The blob is the lock</h3>
+          <ul>
+            <li>Every Ingenic camera ships a closed <code class="inline">tx-isp-t31.ko</code> + <code class="inline">libimp.so</code></li>
+            <li>Compiled against the vendor's <code class="inline">3.10.14</code> tree &mdash; binary porting forward is impractical</li>
+            <li>No replacement &rArr; no kernel upgrades for the whole device class</li>
+            <li>OEM blob is the authoritative reference for register sequencing &amp; ABI</li>
+          </ul>
+        </div>
+        <div class="card accent-green" style="padding:24px 28px;">
+          <div class="card-label">What we're building</div>
+          <h3 class="card-title">Behavioral equivalent of the OEM driver</h3>
+          <ul>
+            <li>Target: T31 today (Wyze Cam 3 class) &mdash; architecture-similar T-series next</li>
+            <li>Goal: <code class="inline">libimp.so</code> runs <strong>unmodified</strong> against the open driver</li>
+            <li>Vendor <code class="inline">3.10.14</code> kernel today; mainline port paused mid-way</li>
+            <li><strong>GPLv3-licensed</strong>, open development, in-tree RE docs, no NDAs</li>
+          </ul>
+          <div class="links" style="margin-top:14px;">
+            <a href="https://github.com/opensensor/open-tx-isp">github.com/opensensor/open-tx-isp</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page">&middot;</span>
+    </div>
+  </section>
+
   <!-- ========================= NEW · ISP pipeline ========================= -->
   <section class="slide" data-label="ISP Pipeline">
     <div class="chrome-top">
@@ -1480,108 +1536,6 @@ _handle_token_delete_request
           <div class="card-label">Surfaces via</div>
           <p style="font-size:18px; margin:6px 0 0;"><code class="inline">/dev/tx-isp*</code> + <strong>34 private V4L2 ioctls</strong> &mdash; most without a vendor header.</p>
         </div>
-      </div>
-    </div>
-    <div class="chrome-bot">
-      <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page">&middot;</span>
-    </div>
-  </section>
-
-  <!-- ========================= NEW · open-tx-isp methodology ========================= -->
-  <section class="slide" data-label="open-tx-isp method">
-    <div class="chrome-top">
-      <span><span class="prompt">$</span> cat docs/methodology.md</span>
-      <span class="meta">§ 02 &middot; how</span>
-    </div>
-    <div class="body">
-      <div class="eyebrow">How we reverse it</div>
-      <h2 class="h-title">Methodology &mdash; trace, model, replace</h2>
-      <div class="h-sub">// tracing the running blob is more useful than reading it cold</div>
-
-      <div class="row4" style="margin-top:36px;">
-        <div class="card accent-blue" style="padding:22px 24px;">
-          <div class="card-label">01 &middot; Trace</div>
-          <h3 class="card-title" style="font-size:24px; margin-bottom:6px;">Watch the OEM run</h3>
-          <p style="font-size:18px; margin:0;">In-tree <code class="inline">driver/tx-isp-trace.c</code> + ftrace/kprobes &mdash; log every MMIO write, every ioctl arg, every IRQ the closed <code class="inline">OEM-tx-isp-t31.ko</code> makes.</p>
-        </div>
-        <div class="card accent-amber" style="padding:22px 24px;">
-          <div class="card-label">02 &middot; Model</div>
-          <h3 class="card-title" style="font-size:24px; margin-bottom:6px;">Derive the state machine</h3>
-          <p style="font-size:18px; margin:0;">Group writes by stage (BLC / DPC / LSC / DEMOSAIC / MDNS / ADR). Capture init vs per-frame vs tuning paths. Living register maps in <code class="inline">driver/REGMAP_*.md</code>.</p>
-        </div>
-        <div class="card accent-green" style="padding:22px 24px;">
-          <div class="card-label">03 &middot; Diff</div>
-          <h3 class="card-title" style="font-size:24px; margin-bottom:6px;">OEM vs ours, function by function</h3>
-          <p style="font-size:18px; margin:0;">Binary Ninja HLIL of the OEM <code class="inline">.ko</code>; semantic diff with <code class="inline">smartdiff</code> via MCP. Anchor: last "crisp image" commit + known block mask <code class="inline">0xDD04</code>.</p>
-        </div>
-        <div class="card accent-coral" style="padding:22px 24px;">
-          <div class="card-label">04 &middot; Replace</div>
-          <h3 class="card-title" style="font-size:24px; margin-bottom:6px;">Write the equivalent</h3>
-          <p style="font-size:18px; margin:0;">Clean-room C against the same vendor <code class="inline">3.10.14</code> kernel. <code class="inline">libimp.so</code> stays untouched &mdash; ABI parity is the test.</p>
-        </div>
-      </div>
-
-      <div class="push" style="margin-top:24px; padding:16px 22px; background:var(--panel); border:1px dashed var(--border-2); border-radius:10px; font-family:var(--font-mono); font-size:18px; color:var(--text-dim);">
-        <span style="color:var(--green)">&rarr;</span> The OEM blob's runtime behavior is its <span class="mono-green">de facto spec</span>. Trace the firehose, encode the spec, prove parity with <code class="inline">libimp.so</code>.
-      </div>
-    </div>
-    <div class="chrome-bot">
-      <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page">&middot;</span>
-    </div>
-  </section>
-
-  <!-- ========================= NEW · open-tx-isp progress ========================= -->
-  <section class="slide" data-label="open-tx-isp status">
-    <div class="chrome-top">
-      <span><span class="prompt">$</span> ./scripts/coverage.sh</span>
-      <span class="meta">§ 02 &middot; status</span>
-    </div>
-    <div class="body">
-      <div class="eyebrow">Where we are</div>
-      <h2 class="h-title">open-tx-isp &mdash; current status</h2>
-      <div class="h-sub">// what's running today vs. what's still WIP</div>
-
-      <div class="tbl" style="margin-top:32px; font-size:19px;">
-        <div class="row head" style="grid-template-columns: 1.8fr 0.9fr 2.4fr;">
-          <div>Subsystem</div><div>Status</div><div>Notes</div>
-        </div>
-        <div class="row" style="grid-template-columns: 1.8fr 0.9fr 2.4fr;">
-          <div>Module load + subdev probe</div>
-          <div class="ok" style="font-weight:600">&check; working</div>
-          <div>Core MMIO, dual-IRQ model (<code class="inline">isp-m0</code> / <code class="inline">isp-w02</code>), subdev graph</div>
-        </div>
-        <div class="row alt" style="grid-template-columns: 1.8fr 0.9fr 2.4fr;">
-          <div>Sensor: <code class="inline">GC2053</code> (Wyze Cam 3)</div>
-          <div class="ok" style="font-weight:600">&check; streaming</div>
-          <div>Probe + stream bring-up enough for live video; other T31 sensors not yet ported</div>
-        </div>
-        <div class="row" style="grid-template-columns: 1.8fr 0.9fr 2.4fr;">
-          <div>ioctl surface (34 private V4L2 / Video for Linux 2)</div>
-          <div class="ok" style="font-weight:600">&check; in place</div>
-          <div>Dispatch wired through <code class="inline">frame_channel_unlocked_ioctl</code>; <code class="inline">libimp.so</code> talks to it</div>
-        </div>
-        <div class="row alt" style="grid-template-columns: 1.8fr 0.9fr 2.4fr;">
-          <div>Tuning blocks (BLC/DPC/LSC/DEMOSAIC/CCM/MDNS/ADR)</div>
-          <div class="warn" style="font-weight:600">~ partial</div>
-          <div>Init paths present; several blocks still on synthetic/default tables instead of OEM data</div>
-        </div>
-        <div class="row" style="grid-template-columns: 1.8fr 0.9fr 2.4fr;">
-          <div>Image quality vs OEM</div>
-          <div class="warn" style="font-weight:600">~ chasing</div>
-          <div>Streams; visible false-color (green/magenta blobs). Anchor: last "crisp image" commit, block mask <code class="inline">0xDD04</code></div>
-        </div>
-        <div class="row alt" style="grid-template-columns: 1.8fr 0.9fr 2.4fr;">
-          <div>Mainline kernel port</div>
-          <div class="bad" style="font-weight:600">paused</div>
-          <div>Today: vendor <code class="inline">3.10.14</code>. Port to modern kernels paused due to time constraints</div>
-        </div>
-      </div>
-
-      <div class="push" style="margin-top:24px; display:flex; justify-content:space-between; align-items:center; font-family:var(--font-mono); font-size:18px;">
-        <span class="pill green"><span class="dot"></span>contributions welcome &middot; image-tuning help especially</span>
-        <span class="mono-green">github.com/opensensor/open-tx-isp &rarr;</span>
       </div>
     </div>
     <div class="chrome-bot">
@@ -1697,6 +1651,64 @@ behavioral delta:
 <span class="prompt">&gt;</span> <span class="cmd">does this explain the green-magenta blob artifact?</span>
 <span class="out">plausible &mdash; CCM reorder + missing clamp would feed bad coefficients to demosaic.
 recommend porting the bounds check + re-running with block mask 0xDD04.</span></div>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page">&middot;</span>
+    </div>
+  </section>
+
+  <!-- ========================= NEW · open-tx-isp progress ========================= -->
+  <section class="slide" data-label="open-tx-isp status">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> ./scripts/coverage.sh</span>
+      <span class="meta">§ 02 &middot; status</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">Where we are</div>
+      <h2 class="h-title">open-tx-isp &mdash; current status</h2>
+      <div class="h-sub">// what's running today vs. what's still WIP</div>
+
+      <div class="tbl" style="margin-top:32px; font-size:19px;">
+        <div class="row head" style="grid-template-columns: 1.8fr 0.9fr 2.4fr;">
+          <div>Subsystem</div><div>Status</div><div>Notes</div>
+        </div>
+        <div class="row" style="grid-template-columns: 1.8fr 0.9fr 2.4fr;">
+          <div>Module load + subdev probe</div>
+          <div class="ok" style="font-weight:600">&check; working</div>
+          <div>Core MMIO, dual-IRQ model (<code class="inline">isp-m0</code> / <code class="inline">isp-w02</code>), subdev graph</div>
+        </div>
+        <div class="row alt" style="grid-template-columns: 1.8fr 0.9fr 2.4fr;">
+          <div>Sensor: <code class="inline">GC2053</code> (Wyze Cam 3)</div>
+          <div class="ok" style="font-weight:600">&check; streaming</div>
+          <div>Probe + stream bring-up enough for live video; other T31 sensors not yet ported</div>
+        </div>
+        <div class="row" style="grid-template-columns: 1.8fr 0.9fr 2.4fr;">
+          <div>ioctl surface (34 private V4L2 / Video for Linux 2)</div>
+          <div class="ok" style="font-weight:600">&check; in place</div>
+          <div>Dispatch wired through <code class="inline">frame_channel_unlocked_ioctl</code>; <code class="inline">libimp.so</code> talks to it</div>
+        </div>
+        <div class="row alt" style="grid-template-columns: 1.8fr 0.9fr 2.4fr;">
+          <div>Tuning blocks (BLC/DPC/LSC/DEMOSAIC/CCM/MDNS/ADR)</div>
+          <div class="warn" style="font-weight:600">~ partial</div>
+          <div>Init paths present; several blocks still on synthetic/default tables instead of OEM data</div>
+        </div>
+        <div class="row" style="grid-template-columns: 1.8fr 0.9fr 2.4fr;">
+          <div>Image quality vs OEM</div>
+          <div class="warn" style="font-weight:600">~ chasing</div>
+          <div>Streams; visible false-color (green/magenta blobs). Anchor: last "crisp image" commit, block mask <code class="inline">0xDD04</code></div>
+        </div>
+        <div class="row alt" style="grid-template-columns: 1.8fr 0.9fr 2.4fr;">
+          <div>Mainline kernel port</div>
+          <div class="bad" style="font-weight:600">paused</div>
+          <div>Today: vendor <code class="inline">3.10.14</code>. Port to modern kernels paused due to time constraints</div>
+        </div>
+      </div>
+
+      <div class="push" style="margin-top:24px; display:flex; justify-content:space-between; align-items:center; font-family:var(--font-mono); font-size:18px;">
+        <span class="pill green"><span class="dot"></span>contributions welcome &middot; image-tuning help especially</span>
+        <span class="mono-green">github.com/opensensor/open-tx-isp &rarr;</span>
       </div>
     </div>
     <div class="chrome-bot">
@@ -1885,51 +1897,7 @@ recommend porting the bounds check + re-running with block mask 0xDD04.</span></
     </div>
   </section>
 
-  <!-- ========================= SLIDE 13 — Mune spark ========================= -->
-  <section class="slide" data-label="The Spark">
-    <div class="chrome-top">
-      <span><span class="prompt">$</span> # the spark</span>
-      <span class="meta">§ 04 · prior art</span>
-    </div>
-    <div class="body" style="justify-content:center;">
-      <div class="eyebrow">The Spark</div>
-      <h2 class="h-display" style="font-size:84px; max-width:1600px;">Voltage glitching <span style="color:var(--muted)">taught us</span> there's a shortcut.</h2>
-
-      <div style="margin-top:48px; padding:32px 40px; background:var(--panel); border-left:4px solid var(--amber); border-radius:4px; max-width:1500px;">
-        <div class="mono-amber" style="font-size:16px; letter-spacing:0.2em; text-transform:uppercase; margin-bottom:10px">Prior art</div>
-        <div style="font-size:34px; color:var(--text); font-family:var(--font-sans); line-height:1.25; margin-bottom:12px;">
-          "Breaking SoC Security by Glitching OTP Data Transfers"
-        </div>
-        <div class="mono-tight" style="color:var(--muted); font-size:22px;">Cristofaro Mune &middot; hardwear.io USA 2022</div>
-      </div>
-
-      <div style="margin-top:40px; max-width:1500px;">
-        <p style="font-size:30px; line-height:1.45; color:var(--text); margin:0;">
-          You don't need the signing key if you can corrupt the <strong style="color:var(--green)">verification process itself.</strong>
-        </p>
-        <p style="font-size:24px; line-height:1.5; color:var(--text-dim); margin:16px 0 0;">
-          What if we could do that without a glitcher, a power probe, or a laser?
-        </p>
-
-        <div style="margin-top:28px; padding:22px 30px; background:var(--panel); border-left:4px solid var(--green); border-radius:4px;">
-          <div class="mono-green" style="font-size:14px; letter-spacing:0.22em; text-transform:uppercase; margin-bottom:8px;">The unlock</div>
-          <div style="font-size:24px; color:var(--text); line-height:1.4;">
-            Once we worked out how to pull the <strong style="color:var(--green)">boot ROM</strong> out of the SoC &mdash; the immutable first-stage code that sits in on-die resident memory at a fixed address &mdash; it became a binary we could simply <em>read</em>.
-          </div>
-        </div>
-
-        <p style="font-size:24px; line-height:1.5; color:var(--text-dim); margin:24px 0 0;">
-          <span style="color:var(--green)">&rarr;</span> With the code in hand, the hunt shifted from physical glitches to <em style="color:var(--text); font-style:italic">logical</em> flaws.
-        </p>
-      </div>
-    </div>
-    <div class="chrome-bot">
-      <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page"><span style="color:var(--green)">13</span><span class="sep">/</span>21</span>
-    </div>
-  </section>
-
-  <!-- ========================= SLIDE 14 — SoC swaps ========================= -->
+  <!-- ========================= SLIDE 13 — SoC swaps ========================= -->
   <section class="slide" data-label="SoC Swaps">
     <div class="chrome-top">
       <span><span class="prompt">$</span> hot_air_gun --temp 380</span>
@@ -1975,6 +1943,50 @@ recommend porting the bounds check + re-running with block mask 0xDD04.</span></
             <div class="img-expand-hint" style="left:8px; right:auto; font-size:12px; padding:3px 8px; background:rgba(0,0,0,0.72); color:var(--green); border-color:rgba(0,227,140,0.45);">after</div>
           </div>
         </div>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page"><span style="color:var(--green)">13</span><span class="sep">/</span>21</span>
+    </div>
+  </section>
+
+  <!-- ========================= SLIDE 14 — Mune spark ========================= -->
+  <section class="slide" data-label="The Spark">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> # the spark</span>
+      <span class="meta">§ 04 · prior art</span>
+    </div>
+    <div class="body" style="justify-content:center;">
+      <div class="eyebrow">The Spark</div>
+      <h2 class="h-display" style="font-size:84px; max-width:1600px;">Voltage glitching <span style="color:var(--muted)">taught us</span> there's a shortcut.</h2>
+
+      <div style="margin-top:48px; padding:32px 40px; background:var(--panel); border-left:4px solid var(--amber); border-radius:4px; max-width:1500px;">
+        <div class="mono-amber" style="font-size:16px; letter-spacing:0.2em; text-transform:uppercase; margin-bottom:10px">Prior art</div>
+        <div style="font-size:34px; color:var(--text); font-family:var(--font-sans); line-height:1.25; margin-bottom:12px;">
+          "Breaking SoC Security by Glitching OTP Data Transfers"
+        </div>
+        <div class="mono-tight" style="color:var(--muted); font-size:22px;">Cristofaro Mune &middot; hardwear.io USA 2022</div>
+      </div>
+
+      <div style="margin-top:40px; max-width:1500px;">
+        <p style="font-size:30px; line-height:1.45; color:var(--text); margin:0;">
+          You don't need the signing key if you can corrupt the <strong style="color:var(--green)">verification process itself.</strong>
+        </p>
+        <p style="font-size:24px; line-height:1.5; color:var(--text-dim); margin:16px 0 0;">
+          What if we could do that without a glitcher, a power probe, or a laser?
+        </p>
+
+        <div style="margin-top:28px; padding:22px 30px; background:var(--panel); border-left:4px solid var(--green); border-radius:4px;">
+          <div class="mono-green" style="font-size:14px; letter-spacing:0.22em; text-transform:uppercase; margin-bottom:8px;">The unlock</div>
+          <div style="font-size:24px; color:var(--text); line-height:1.4;">
+            Once we worked out how to pull the <strong style="color:var(--green)">boot ROM</strong> out of the SoC &mdash; the immutable first-stage code that sits in on-die resident memory at a fixed address &mdash; it became a binary we could simply <em>read</em>.
+          </div>
+        </div>
+
+        <p style="font-size:24px; line-height:1.5; color:var(--text-dim); margin:24px 0 0;">
+          <span style="color:var(--green)">&rarr;</span> With the code in hand, the hunt shifted from physical glitches to <em style="color:var(--text); font-style:italic">logical</em> flaws.
+        </p>
       </div>
     </div>
     <div class="chrome-bot">
@@ -2393,7 +2405,7 @@ recommend porting the bounds check + re-running with block mask 0xDD04.</span></
  * Handles:
  *  (a) speaker notes — reads <script type="application/json" id="speaker-notes">
  *      and posts {slideIndexChanged: N} to the parent window on nav.
- *  (b) keyboard navigation — ←/→, PgUp/PgDn, Space, Home/End, number keys.
+ *  (b) keyboard navigation — ←/→, PgUp/PgDn, Space, Home/End, number keys, R = reset to first slide.
  *  (c) bottom-center overlay showing slide count + hints, fades out on idle.
  *  (d) auto-scaling — inner canvas is a fixed design size (default 1920×1080)
  *      scaled with `transform: scale()` to fit the viewport, letterboxed.
@@ -2941,6 +2953,8 @@ recommend porting the bounds check + re-running with block mask 0xDD04.</span></
         // 1..9 jump to that slide; 0 jumps to 10.
         const n = key === '0' ? 9 : parseInt(key, 10) - 1;
         if (n < this._slides.length) this._go(n, 'keyboard');
+      } else if (key === 'r' || key === 'R') {
+        this._go(0, 'keyboard');
       } else {
         handled = false;
       }
