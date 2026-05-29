@@ -2151,151 +2151,162 @@ recommend porting the bounds check + re-running with block mask 0xDD04.</span></
     </div>
   </section>
 
-  <!-- ========================= SLIDE 15 — Boot ROM analysis ========================= -->
-  <section class="slide" data-label="Boot ROM Analysis">
+  <!-- ========================= SLIDE 27 — Boot ROM + AI RE ========================= -->
+  <section class="slide" data-label="Boot ROM Analysis + AI RE">
     <div class="chrome-top">
-      <span><span class="prompt">$</span> binja bootrom.bin</span>
+      <span><span class="prompt">$</span> ./dump_bootrom --soc t31 | mcp.stream(binja.decomp)</span>
       <span class="meta">§ 04 · breakthrough</span>
     </div>
     <div class="body">
-      <div class="eyebrow">Breakthrough &middot; co-research with Alfonso Gamboa</div>
-      <h2 class="h-title">Boot ROM analysis</h2>
-      <div class="h-sub">// extracting the immutable code that decides everything</div>
-      <div style="margin-top:14px; display:flex; align-items:center; gap:10px; font-family:var(--font-mono); font-size:18px; color:var(--text-dim);">
-        <span class="pill green"><span class="dot"></span>credit</span>
-        <span><span class="mono-green">Alfonso Gamboa</span> figured out that the cloner protocol exposes the entire boot ROM &mdash; the move that unlocked everything that follows.</span>
-      </div>
+      <div class="eyebrow">5 SoC families extracted + cross-compared</div>
+      <h2 class="h-title">Boot ROM analysis + AI-assisted RE</h2>
+      <div class="h-sub">// Smart Diff MCP pipeline surfaces vulnerability patterns</div>
 
-      <div class="term" style="margin-top:48px;">
-        <div class="term-head">
-          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-          <span class="title">terminal · bootrom_extraction</span>
+      <div class="row2" style="margin-top:24px; gap:28px; flex:1;">
+        <div style="display:flex; flex-direction:column; gap:18px;">
+          <div class="term" style="font-size:18px;">
+            <div class="term-head">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span class="title" style="font-size:16px;">bootrom extraction</span>
+            </div>
+            <div class="term-body"><span class="cmt"># libusb_set_configuration(1) required</span>
+<span class="prompt" style="font-size:16px;">$</span> <span class="cmd" style="font-size:16px;">./dump_bootrom --soc t31</span>
+<span class="out" style="font-size:15px;">[+] opened a108:c309 (Ingenic USB boot)</span>
+<span class="out" style="font-size:15px;">[+] set configuration to 1</span>
+<span class="out" style="font-size:15px;">[+] VR_SET_DATA_ADDR = 0xBFC00000</span>
+<span class="out" style="font-size:15px;">[+] bulk IN → t31_bootrom.bin (32KB)</span></div>
+          </div>
+
+          <div class="card accent-blue" style="flex:0 0 auto;">
+            <div class="card-label" style="font-size:14px;">Tooling</div>
+            <h3 class="card-title" style="font-size:20px;">Binary Ninja + headless API</h3>
+            <p style="font-size:16px; margin:0"><code class="inline">MIPS:LE:32:default</code> architecture. Custom Python script exports decompiled C for all functions.</p>
+          </div>
         </div>
-        <div class="term-body"><span class="cmt"># USB cloner protocol RE revealed:</span>
-<span class="cmt"># the boot ROM itself is readable.</span>
-<span class="prompt">$</span> <span class="cmd">python3 read_bootrom.py --soc t41 -o t41_bootrom.bin</span>
-<span class="out">[+] handshake ok</span>
-<span class="out">[+] reading 65536 bytes from mask ROM...</span>
-<span class="out">[+] done.</span>
 
-<span class="prompt">$</span> <span class="cmd">file t41_bootrom.bin</span>
-<span class="out">t41_bootrom.bin: data, 65536 bytes  </span><span class="hi"># the keys to the kingdom</span></div>
-      </div>
+        <div style="display:flex; flex-direction:column; gap:18px;">
+          <div style="text-align:center; padding:24px; background:var(--panel); border:1px solid var(--border); border-radius:12px;">
+            <div class="mono-green" style="font-size:14px; letter-spacing:0.2em; text-transform:uppercase; margin-bottom:8px">T40 &harr; T41 Similarity</div>
+            <div style="font-size:72px; font-family:var(--font-mono); font-weight:600; color:var(--green); line-height:1;">86.6<span style="font-size:36px; color:var(--green-dim)">%</span></div>
+          </div>
 
-      <div class="row2" style="margin-top:36px; gap:24px;">
-        <div class="card accent-blue">
-          <div class="card-label">Tooling</div>
-          <h3 class="card-title" style="font-size:28px">Binary Ninja + Smart Diff MCP</h3>
-          <p style="font-size:20px; margin:0">Decompilation streamed to the LLM. Human-in-the-loop vulnerability hunting.</p>
-        </div>
-        <div class="card accent-green">
-          <div class="card-label">Result</div>
-          <h3 class="card-title" style="font-size:28px">Real analysis, for the first time</h3>
-          <p style="font-size:20px; margin:0">We stopped guessing. We started reading the actual code that runs first.</p>
+          <div class="card accent-green" style="flex:0 0 auto;">
+            <div class="card-label" style="font-size:14px;">Key discovery</div>
+            <h3 class="card-title" style="font-size:20px;">Init-table before verify</h3>
+            <p style="font-size:16px; margin:0">Smart Diff MCP pipeline revealed T41/T32/T40/A1 parse init tables <em>before</em> calling the verifier.</p>
+          </div>
+
+          <div class="card accent-amber" style="flex:0 0 auto;">
+            <div class="card-label" style="font-size:14px;">T31 discovery</div>
+            <h3 class="card-title" style="font-size:20px;">FUN_bfc035b0 partial compare</h3>
+            <p style="font-size:16px; margin:0">Same pipeline flagged <code class="inline">local_138[0] == local_38[0]</code> — only 4 bytes checked.</p>
+          </div>
         </div>
       </div>
     </div>
     <div class="chrome-bot">
       <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page"><span style="color:var(--green)">15</span><span class="sep">/</span>21</span>
+      <span class="page"><span style="color:var(--green)">27</span><span class="sep">/</span>34</span>
     </div>
   </section>
 
-  <!-- ========================= SLIDE 16 — Two vuln classes ========================= -->
+  <!-- ========================= SLIDE 28 — LLM assistance ========================= -->
+  <section class="slide" data-label="LLM Assistance">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> qwen --local --help</span>
+      <span class="meta">§ 04 · methodology</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">AI-assisted reverse engineering workflow</div>
+      <h2 class="h-title">LLM assistance · frontier vs local</h2>
+      <div class="h-sub">// two different experiences</div>
+
+      <div style="margin-top:32px; display:grid; grid-template-columns: 1.3fr 0.9fr; gap:28px; align-items:start;">
+        <div>
+          <div class="img-expand"
+               data-src="photos/claudes_refusals.png"
+               data-caption="Claude refusal log — frontier model guardrails"
+               style="width:100%; aspect-ratio:16/9; background:#000; border-radius:12px; overflow:hidden;">
+            <img src="photos/claudes_refusals.png" alt="Collection of AI refusal messages" style="width:100%; height:100%; object-fit:contain; padding:12px;">
+            <div class="img-expand-hint" style="font-size:13px; padding:4px 10px; right:10px; bottom:10px; background:rgba(0,0,0,0.75);">⤢ expand</div>
+          </div>
+          <div class="mono-amber" style="font-size:14px; letter-spacing:0.2em; text-transform:uppercase; margin-top:16px; margin-bottom:8px;">Frontier model experience</div>
+          <div style="font-size:19px; line-height:1.5; color:var(--text-dim);">
+            As LLM capabilities improve, refusal rates increase. RLHF-trained models increasingly block vulnerability research, exploit workflows, and even presentation editing requests.
+          </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:20px;">
+          <div class="card accent-green">
+            <div class="card-label">Local model workflow</div>
+            <h3 class="card-title" style="font-size:22px;">Qwen (local deployment)</h3>
+            <p style="font-size:18px; margin:0">Used local Qwen models for slide refinement, code analysis, and documentation throughout this research. No guardrails, full control, privacy-preserving.</p>
+          </div>
+
+          <div class="card accent-blue">
+            <div class="card-label">The workflow</div>
+            <h3 class="card-title" style="font-size:22px;">Smart Diff MCP + Binary Ninja</h3>
+            <p style="font-size:18px; margin:0">Decompiled boot ROM functions streamed to local LLM for pattern analysis. Cross-SoC comparison revealed vulnerability classes in hours.</p>
+          </div>
+
+          <div class="card" style="border-color:var(--green);">
+            <div class="card-label" style="color:var(--green);">Key takeaway</div>
+            <p style="font-size:18px; margin:0;">For security research, local models provide capability without censorship. Frontier models excel at everything except the work you're actually doing.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page"><span style="color:var(--green)">28</span><span class="sep">/</span>34</span>
+    </div>
+  </section>
+
+  <!-- ========================= SLIDE 29 — Two vuln classes ========================= -->
   <section class="slide" data-label="Two Vuln Classes">
     <div class="chrome-top">
       <span><span class="prompt">$</span> cat findings.md</span>
       <span class="meta">§ 05 · findings</span>
     </div>
     <div class="body">
-      <div class="eyebrow">What we found</div>
+      <div class="eyebrow">Two distinct bug classes across 5 SoCs</div>
       <h2 class="h-title">Two vulnerability classes</h2>
 
       <div class="row2" style="margin-top:48px; flex:1;">
         <div class="card accent-coral">
           <div class="card-label">Bug class 01 · T31</div>
-          <h3 class="card-title" style="font-size:34px">32-bit verification</h3>
+          <h3 class="card-title" style="font-size:34px">32-bit partial verify</h3>
           <ul>
-            <li>Verifier checks <strong style="color:var(--coral)">one 32-bit word</strong> of the RSA output</li>
-            <li>RSA-2048 / SHA-256 reduced to a 32-bit brute force</li>
-            <li>~<strong style="color:var(--coral)">217 seconds</strong> to forge an image</li>
-            <li class="dim">The crypto is there &mdash; just barely enforced.</li>
+            <li>Verifier checks only <strong style="color:var(--coral)">word[0]</strong> of SHA-256 digest</li>
+            <li>SPL layout: sig@0x200, modulus@0x300, payload@0x800</li>
+            <li>Example brute force target: <code class="inline mono">0x3024cc99</code></li>
+            <li class="dim">RSA-2048 / SHA-256 reduced to 4-byte collision</li>
           </ul>
         </div>
         <div class="card accent-amber">
           <div class="card-label">Bug class 02 · T32 / T40 / T41 / A1</div>
-          <h3 class="card-title" style="font-size:34px">Init-table bypass</h3>
+          <h3 class="card-title" style="font-size:34px">Pre-verify init table</h3>
           <ul>
-            <li>ROM parses an init table <strong style="color:var(--amber)">before</strong> verifying the signature</li>
-            <li>Init table supports full 32-bit write addresses</li>
-            <li>Write to SRAM &rarr; corrupt secure-boot state &rarr; skip verify</li>
-            <li class="dim">The verification is sound. It just never runs.</li>
+            <li>Init table parsed <strong style="color:var(--amber)">before</strong> signature verification</li>
+            <li>Full 32-bit write pointers in <code class="inline mono">0x14</code>-byte entries</li>
+            <li>T41 SRAM target: <code class="inline mono">0x80000090</code> (clears secure-boot flag)</li>
+            <li class="dim">Crypto is sound. It just never runs.</li>
           </ul>
         </div>
       </div>
 
       <div class="push" style="margin-top:48px; display:flex; justify-content:space-between; align-items:center; font-family:var(--font-mono); font-size:22px; color:var(--muted);">
-        <span><span class="mono-green">→</span> Different chips. Different flaws. Same outcome: unsigned code runs.</span>
+        <span><span class="mono-green">→</span> Not one flaw. Two separate vulnerability classes.</span>
         <span class="pill green"><span class="dot"></span>coordinated disclosure in progress</span>
       </div>
     </div>
     <div class="chrome-bot">
       <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page"><span style="color:var(--green)">16</span><span class="sep">/</span>21</span>
+      <span class="page"><span style="color:var(--green)">29</span><span class="sep">/</span>34</span>
     </div>
   </section>
 
-  <!-- ========================= SLIDE 17 — AI-assisted RE ========================= -->
-  <section class="slide" data-label="AI-Assisted RE">
-    <div class="chrome-top">
-      <span><span class="prompt">$</span> mcp.pipe(binja, claude)</span>
-      <span class="meta">§ 05 · method</span>
-    </div>
-    <div class="body">
-      <div class="eyebrow">Method Note</div>
-      <h2 class="h-title">AI-assisted reverse engineering</h2>
-      <div class="h-sub">// Binary Ninja + MCP server + frontier LLM as a research partner</div>
-
-      <div style="margin-top:48px; display:grid; grid-template-columns: 1fr 1fr; gap:28px; flex:1;">
-        <div style="display:flex; flex-direction:column; gap:20px;">
-          <div class="card accent-blue">
-            <div class="card-label">Pipeline</div>
-            <h3 class="card-title" style="font-size:28px">Smart Diff MCP</h3>
-            <p style="font-size:20px; margin:0">Streams Binary Ninja decompilation into Claude / GPT frontier models. Live Q&amp;A over real decomp.</p>
-          </div>
-          <div class="card accent-green">
-            <div class="card-label">Cross-SoC comparison</div>
-            <h3 class="card-title" style="font-size:28px">T31 vs T41 boot ROM</h3>
-            <p style="font-size:20px; margin:0">The LLM spotted what the vendor didn't: init-table parsing happens <em>before</em> the signature check.</p>
-          </div>
-          <div class="card accent-amber">
-            <div class="card-label">Independent hit</div>
-            <h3 class="card-title" style="font-size:28px">T31 32-bit compare</h3>
-            <p style="font-size:20px; margin:0">The same pipeline flagged the partial compare on T31. Two flaws, one afternoon.</p>
-          </div>
-        </div>
-
-        <div style="display:flex; flex-direction:column; justify-content:center; gap:24px;">
-          <div style="text-align:center; padding:40px; background:var(--panel); border:1px solid var(--border); border-radius:12px;">
-            <div class="mono-green" style="font-size:16px; letter-spacing:0.2em; text-transform:uppercase; margin-bottom:10px">Function Similarity</div>
-            <div style="font-size:120px; font-family:var(--font-mono); font-weight:600; color:var(--green); line-height:1;">86.6<span style="font-size:60px; color:var(--green-dim)">%</span></div>
-            <div style="color:var(--text-dim); font-size:20px; margin-top:12px; font-family:var(--font-mono);">T40 &harr; T41 boot ROMs</div>
-          </div>
-          <div class="card">
-            <div class="card-label">Takeaway</div>
-            <h3 class="card-title" style="font-size:26px">Human intuition + AI pattern matching</h3>
-            <p style="font-size:20px; margin:0">The humans still do the hard part. The AI is a force multiplier on "where should I even look?"</p>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="chrome-bot">
-      <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page"><span style="color:var(--green)">17</span><span class="sep">/</span>21</span>
-    </div>
-  </section>
-
-  <!-- ========================= SLIDE 18 — T31 ========================= -->
+  <!-- ========================= SLIDE 30 — T31 ========================= -->
   <section class="slide" data-label="T31 32-bit Flaw">
     <div class="chrome-top">
       <span><span class="prompt">$</span> forge --target t31 --time 217s</span>
@@ -2354,11 +2365,11 @@ recommend porting the bounds check + re-running with block mask 0xDD04.</span></
     </div>
     <div class="chrome-bot">
       <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page"><span style="color:var(--green)">18</span><span class="sep">/</span>21</span>
+      <span class="page"><span style="color:var(--green)">30</span><span class="sep">/</span>34</span>
     </div>
   </section>
 
-  <!-- ========================= SLIDE 19 — Newer SoCs ========================= -->
+  <!-- ========================= SLIDE 31 — Newer SoCs ========================= -->
   <section class="slide" data-label="Newer SoCs">
     <div class="chrome-top">
       <span><span class="prompt">$</span> diff t31 t41 | grep crypto</span>
@@ -2368,38 +2379,53 @@ recommend porting the bounds check + re-running with block mask 0xDD04.</span></
       <div class="eyebrow">The sequel</div>
       <h2 class="h-title">Newer SoCs fixed the crypto&hellip; right?</h2>
 
-      <div class="row2" style="margin-top:56px;">
-        <div class="card accent-coral">
-          <div class="card-label">T31 · older</div>
-          <h3 class="card-title" style="font-size:32px">32-bit partial compare</h3>
-          <p style="font-size:22px;">Crypto is <strong style="color:var(--coral)">broken</strong>. Forge an image in under four minutes.</p>
+      <div class="row2" style="margin-top:36px;">
+        <div class="card accent-coral" style="flex:0 0 auto;">
+          <div class="card-label" style="font-size:14px;">T31 · older</div>
+          <h3 class="card-title" style="font-size:26px">32-bit partial compare</h3>
+          <p style="font-size:18px;">Crypto <strong style="color:var(--coral)">broken</strong>. Forge in &lt;4 min.</p>
         </div>
-        <div class="card accent-green">
-          <div class="card-label">T32 / T40 / T41 / A1 · newer</div>
-          <h3 class="card-title" style="font-size:32px">Full 32-byte RSA-PSS compare</h3>
-          <p style="font-size:22px;">Crypto is <strong style="color:var(--green)">sound</strong>. Good job. <span class="dim">&hellip;wait.</span></p>
+        <div class="card accent-green" style="flex:0 0 auto;">
+          <div class="card-label" style="font-size:14px;">T32 / T40 / T41 / A1</div>
+          <h3 class="card-title" style="font-size:26px">Full 32-byte RSA-PSS</h3>
+          <p style="font-size:18px;">Crypto <strong style="color:var(--green)">sound</strong>. <span class="dim">&hellip;wait.</span></p>
         </div>
       </div>
 
-      <div style="margin-top:56px; padding:36px 44px; background:var(--panel); border:1px solid var(--amber); border-left:6px solid var(--amber); border-radius:10px;">
-        <div class="mono-amber" style="font-size:16px; letter-spacing:0.22em; text-transform:uppercase; margin-bottom:14px;">but they introduced a new flaw</div>
-        <div style="font-size:32px; color:var(--text); line-height:1.35; font-family:var(--font-sans);">
-          The newer boot ROMs load fuse state into SRAM via an <span class="mono-amber">init table</span>
-          <em style="color:var(--amber); font-style:italic">before</em> verifying the signature chain &mdash;
-          something the T31 did <em>not</em> do.
+      <div style="margin-top:28px; padding:24px 32px; background:var(--panel); border:1px solid var(--amber); border-left:5px solid var(--amber); border-radius:8px;">
+        <div class="mono-amber" style="font-size:14px; letter-spacing:0.2em; text-transform:uppercase; margin-bottom:10px;">new flaw: init table before verify</div>
+        <div style="font-size:24px; color:var(--text); line-height:1.3; font-family:var(--font-sans);">
+          Boot ROM parses attacker-controlled <span class="mono-amber">init table</span> before signature check.
         </div>
-        <div class="push" style="margin-top:20px; font-family:var(--font-mono); font-size:22px; color:var(--muted);">
-          <span style="color:var(--amber)">→</span> the fix created a new attack surface.
+      </div>
+
+      <div style="margin-top:24px;">
+        <div class="tbl">
+          <div class="row head" style="grid-template-columns: 1fr 1fr 1fr; font-size:15px;">
+            <div>SoC</div><div>Vulnerability</div><div>SRAM Target</div>
+          </div>
+          <div class="row" style="grid-template-columns: 1fr 1fr 1fr; font-size:16px;">
+            <div class="mono" style="color:var(--coral)">T31</div><div>32-bit verify <span class="mono-green">✓</span></div><div class="mono">0x3024cc99</div>
+          </div>
+          <div class="row alt" style="grid-template-columns: 1fr 1fr 1fr; font-size:16px;">
+            <div class="mono" style="color:var(--green)">T32</div><div>Init-table bypass <span class="mono-green">✓</span></div><div class="mono">0x80000024</div>
+          </div>
+          <div class="row" style="grid-template-columns: 1fr 1fr 1fr; font-size:16px;">
+            <div class="mono" style="color:var(--amber)">T40</div><div>Init-table bypass <span class="dim" style="font-size:14px;">(unconfirmed)</span></div><div class="mono">0x800000b0</div>
+          </div>
+          <div class="row alt" style="grid-template-columns: 1fr 1fr 1fr; font-size:16px;">
+            <div class="mono" style="color:var(--green)">T41</div><div>Init-table bypass <span class="mono-green">✓</span></div><div class="mono">0x80000090</div>
+          </div>
         </div>
       </div>
     </div>
     <div class="chrome-bot">
       <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page"><span style="color:var(--green)">19</span><span class="sep">/</span>21</span>
+      <span class="page"><span style="color:var(--green)">31</span><span class="sep">/</span>34</span>
     </div>
   </section>
 
-  <!-- ========================= SLIDE 20 — T41 bypass ========================= -->
+  <!-- ========================= SLIDE 32 — T41 bypass ========================= -->
   <section class="slide" data-label="T41 Bypass">
     <div class="chrome-top">
       <span><span class="prompt">$</span> write 0x0 → 0x80000090</span>
@@ -2450,11 +2476,11 @@ recommend porting the bounds check + re-running with block mask 0xDD04.</span></
     </div>
     <div class="chrome-bot">
       <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page"><span style="color:var(--green)">20</span><span class="sep">/</span>21</span>
+      <span class="page"><span style="color:var(--green)">32</span><span class="sep">/</span>34</span>
     </div>
   </section>
 
-  <!-- ========================= SLIDE 21 — Bigger picture ========================= -->
+  <!-- ========================= SLIDE 33 — Bigger picture ========================= -->
   <section class="slide" data-label="The Bigger Picture">
     <div class="chrome-top">
       <span><span class="prompt">$</span> ./summary.sh</span>
@@ -2510,11 +2536,11 @@ recommend porting the bounds check + re-running with block mask 0xDD04.</span></
     </div>
     <div class="chrome-bot">
       <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page"><span style="color:var(--green)">21</span><span class="sep">/</span>21</span>
+      <span class="page"><span style="color:var(--green)">33</span><span class="sep">/</span>34</span>
     </div>
   </section>
 
-  <!-- ========================= SLIDE 32 — Q&A / Thanks ========================= -->
+  <!-- ========================= SLIDE 34 — Q&A / Thanks ========================= -->
   <section class="slide" data-label="Q&amp;A · Thanks">
     <div class="chrome-top">
       <span><span class="prompt">$</span> talk --end</span>
@@ -2543,7 +2569,7 @@ recommend porting the bounds check + re-running with block mask 0xDD04.</span></
     </div>
     <div class="chrome-bot">
       <span class="meta">bsides_maine_2026 // matt davis &middot; thank you</span>
-      <span class="page"><span style="color:var(--green)">22</span><span class="sep">/</span>22</span>
+      <span class="page"><span style="color:var(--green)">34</span><span class="sep">/</span>34</span>
     </div>
   </section>
 
