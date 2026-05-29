@@ -1,0 +1,7 @@
+[run] mic=plughw:2,0 model=small.en
+[asr] loading faster-whisper 'small.en' on CUDA (float16)...
+[asr] model ready.
+[mic] ffmpeg capturing plughw:2,0 @ 16000Hz
+[ws] captions live at ws://127.0.0.1:8765
+/usr/lib/python3.14/multiprocessing/resource_tracker.py:396: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown: {'/mp-7qq8trw0'}
+  warnings.warn(

@@ -1,0 +1,6 @@
+faster-whisper>=1.1.0
+numpy>=1.24
+websockets>=12.0
+# CUDA 12 runtime libs for CTranslate2 (works under the CUDA 13 driver).
+nvidia-cublas-cu12
+nvidia-cudnn-cu12>=9.0
