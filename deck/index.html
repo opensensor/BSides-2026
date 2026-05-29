@@ -1909,38 +1909,7 @@ recommend porting the bounds check + re-running with block mask 0xDD04.</span></
     </div>
   </section>
 
-  <!-- ========================= SLIDE 10 — Ethics ========================= -->
-  <section class="slide" data-label="Ethics">
-    <div class="chrome-top">
-      <span><span class="prompt">$</span> # a brief disclaimer</span>
-      <span class="meta">§ 03 · ethics</span>
-    </div>
-    <div class="body" style="justify-content:center;">
-      <div class="eyebrow">A note before we proceed</div>
-      <h2 class="h-title" style="margin-top:8px; font-size:76px; max-width:1500px;">
-        Secure boot exists for <em style="font-style:italic; color:var(--green)">good reasons</em>.
-      </h2>
-
-      <div style="margin-top:48px; display:grid; grid-template-columns: 1fr 1fr; gap:32px;">
-        <div class="card accent-coral">
-          <div class="card-label">Out of scope</div>
-          <h3 class="card-title">Safety-critical systems</h3>
-          <p style="font-size:24px;">Automotive. Medical. Aviation. Industrial control. <strong style="color:var(--coral)">Do not tamper</strong>. Lives depend on firmware integrity. I stand by that.</p>
-        </div>
-        <div class="card accent-green">
-          <div class="card-label">In scope</div>
-          <h3 class="card-title">A $25 camera in your living room</h3>
-          <p style="font-size:24px;">That's a different conversation entirely. Your hardware. Your software. Your ability to audit, patch, and replace it yourself.</p>
-        </div>
-      </div>
-    </div>
-    <div class="chrome-bot">
-      <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page"><span style="color:var(--green)">10</span><span class="sep">/</span>21</span>
-    </div>
-  </section>
-
-  <!-- ========================= SLIDE 11 — Secure Boot 101 ========================= -->
+  <!-- ========================= SLIDE 10 — Secure Boot 101 ========================= -->
   <section class="slide" data-label="Secure Boot 101">
     <div class="chrome-top">
       <span><span class="prompt">$</span> how_does_secure_boot_work</span>
@@ -2003,6 +1972,37 @@ recommend porting the bounds check + re-running with block mask 0xDD04.</span></
     </div>
     <div class="chrome-bot">
       <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page"><span style="color:var(--green)">10</span><span class="sep">/</span>21</span>
+    </div>
+  </section>
+
+  <!-- ========================= SLIDE 11 — Ethics ========================= -->
+  <section class="slide" data-label="Ethics">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> # a brief disclaimer</span>
+      <span class="meta">§ 03 · ethics</span>
+    </div>
+    <div class="body" style="justify-content:center;">
+      <div class="eyebrow">A note before we proceed</div>
+      <h2 class="h-title" style="margin-top:8px; font-size:76px; max-width:1500px;">
+        Secure boot exists for <em style="font-style:italic; color:var(--green)">good reasons</em>.
+      </h2>
+
+      <div style="margin-top:48px; display:grid; grid-template-columns: 1fr 1fr; gap:32px;">
+        <div class="card accent-coral">
+          <div class="card-label">Out of scope</div>
+          <h3 class="card-title">Safety-critical systems</h3>
+          <p style="font-size:24px;">Automotive. Medical. Aviation. Industrial control. <strong style="color:var(--coral)">Do not tamper</strong>. Lives depend on firmware integrity. I stand by that.</p>
+        </div>
+        <div class="card accent-green">
+          <div class="card-label">In scope</div>
+          <h3 class="card-title">A $25 camera in your living room</h3>
+          <p style="font-size:24px;">That's a different conversation entirely. Your hardware. Your software. Your ability to audit, patch, and replace it yourself.</p>
+        </div>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
       <span class="page"><span style="color:var(--green)">11</span><span class="sep">/</span>21</span>
     </div>
   </section>
@@ -2053,7 +2053,51 @@ recommend porting the bounds check + re-running with block mask 0xDD04.</span></
     </div>
   </section>
 
-  <!-- ========================= SLIDE 13 — SoC swaps ========================= -->
+  <!-- ========================= SLIDE 13 — Mune spark ========================= -->
+  <section class="slide" data-label="The Spark">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> # the spark</span>
+      <span class="meta">§ 04 · prior art</span>
+    </div>
+    <div class="body" style="justify-content:center;">
+      <div class="eyebrow">The Spark</div>
+      <h2 class="h-display" style="font-size:84px; max-width:1600px;">Voltage glitching <span style="color:var(--muted)">taught us</span> there's a shortcut.</h2>
+
+      <div style="margin-top:48px; padding:32px 40px; background:var(--panel); border-left:4px solid var(--amber); border-radius:4px; max-width:1500px;">
+        <div class="mono-amber" style="font-size:16px; letter-spacing:0.2em; text-transform:uppercase; margin-bottom:10px">Prior art</div>
+        <div style="font-size:34px; color:var(--text); font-family:var(--font-sans); line-height:1.25; margin-bottom:12px;">
+          "Breaking SoC Security by Glitching OTP Data Transfers"
+        </div>
+        <div class="mono-tight" style="color:var(--muted); font-size:22px;">Cristofaro Mune &middot; hardwear.io USA 2022</div>
+      </div>
+
+      <div style="margin-top:40px; max-width:1500px;">
+        <p style="font-size:30px; line-height:1.45; color:var(--text); margin:0;">
+          You don't need the signing key if you can corrupt the <strong style="color:var(--green)">verification process itself.</strong>
+        </p>
+        <p style="font-size:24px; line-height:1.5; color:var(--text-dim); margin:16px 0 0;">
+          What if we could do that without a glitcher, a power probe, or a laser?
+        </p>
+
+        <div style="margin-top:28px; padding:22px 30px; background:var(--panel); border-left:4px solid var(--green); border-radius:4px;">
+          <div class="mono-green" style="font-size:14px; letter-spacing:0.22em; text-transform:uppercase; margin-bottom:8px;">The unlock</div>
+          <div style="font-size:24px; color:var(--text); line-height:1.4;">
+            Once we worked out how to pull the <strong style="color:var(--green)">boot ROM</strong> out of the SoC &mdash; the immutable first-stage code that sits in on-die resident memory at a fixed address &mdash; it became a binary we could simply <em>read</em>.
+          </div>
+        </div>
+
+        <p style="font-size:24px; line-height:1.5; color:var(--text-dim); margin:24px 0 0;">
+          <span style="color:var(--green)">&rarr;</span> With the code in hand, the hunt shifted from physical glitches to <em style="color:var(--text); font-style:italic">logical</em> flaws.
+        </p>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page"><span style="color:var(--green)">13</span><span class="sep">/</span>21</span>
+    </div>
+  </section>
+
+  <!-- ========================= SLIDE 14 — SoC swaps ========================= -->
   <section class="slide" data-label="SoC Swaps">
     <div class="chrome-top">
       <span><span class="prompt">$</span> hot_air_gun --temp 380</span>
@@ -2099,50 +2143,6 @@ recommend porting the bounds check + re-running with block mask 0xDD04.</span></
             <div class="img-expand-hint" style="left:8px; right:auto; font-size:12px; padding:3px 8px; background:rgba(0,0,0,0.72); color:var(--green); border-color:rgba(0,227,140,0.45);">after</div>
           </div>
         </div>
-      </div>
-    </div>
-    <div class="chrome-bot">
-      <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page"><span style="color:var(--green)">13</span><span class="sep">/</span>21</span>
-    </div>
-  </section>
-
-  <!-- ========================= SLIDE 14 — Mune spark ========================= -->
-  <section class="slide" data-label="The Spark">
-    <div class="chrome-top">
-      <span><span class="prompt">$</span> # the spark</span>
-      <span class="meta">§ 04 · prior art</span>
-    </div>
-    <div class="body" style="justify-content:center;">
-      <div class="eyebrow">The Spark</div>
-      <h2 class="h-display" style="font-size:84px; max-width:1600px;">Voltage glitching <span style="color:var(--muted)">taught us</span> there's a shortcut.</h2>
-
-      <div style="margin-top:48px; padding:32px 40px; background:var(--panel); border-left:4px solid var(--amber); border-radius:4px; max-width:1500px;">
-        <div class="mono-amber" style="font-size:16px; letter-spacing:0.2em; text-transform:uppercase; margin-bottom:10px">Prior art</div>
-        <div style="font-size:34px; color:var(--text); font-family:var(--font-sans); line-height:1.25; margin-bottom:12px;">
-          "Breaking SoC Security by Glitching OTP Data Transfers"
-        </div>
-        <div class="mono-tight" style="color:var(--muted); font-size:22px;">Cristofaro Mune &middot; hardwear.io USA 2022</div>
-      </div>
-
-      <div style="margin-top:40px; max-width:1500px;">
-        <p style="font-size:30px; line-height:1.45; color:var(--text); margin:0;">
-          You don't need the signing key if you can corrupt the <strong style="color:var(--green)">verification process itself.</strong>
-        </p>
-        <p style="font-size:24px; line-height:1.5; color:var(--text-dim); margin:16px 0 0;">
-          What if we could do that without a glitcher, a power probe, or a laser?
-        </p>
-
-        <div style="margin-top:28px; padding:22px 30px; background:var(--panel); border-left:4px solid var(--green); border-radius:4px;">
-          <div class="mono-green" style="font-size:14px; letter-spacing:0.22em; text-transform:uppercase; margin-bottom:8px;">The unlock</div>
-          <div style="font-size:24px; color:var(--text); line-height:1.4;">
-            Once we worked out how to pull the <strong style="color:var(--green)">boot ROM</strong> out of the SoC &mdash; the immutable first-stage code that sits in on-die resident memory at a fixed address &mdash; it became a binary we could simply <em>read</em>.
-          </div>
-        </div>
-
-        <p style="font-size:24px; line-height:1.5; color:var(--text-dim); margin:24px 0 0;">
-          <span style="color:var(--green)">&rarr;</span> With the code in hand, the hunt shifted from physical glitches to <em style="color:var(--text); font-style:italic">logical</em> flaws.
-        </p>
       </div>
     </div>
     <div class="chrome-bot">
