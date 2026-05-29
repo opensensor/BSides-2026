@@ -11,8 +11,16 @@
   'use strict';
 
   var WS_URL = 'ws://127.0.0.1:8765';
-  var HIDE_AFTER_MS = 6000;   // fade out after this much silence
+  var INTERIM_HIDE_MS = 1800; // a partial with no follow-up clears quickly
+  var REPEAT_WINDOW_MS = 4000;// drop an identical final re-sent within this window
   var MAX_CHARS = 180;        // keep the line readable; trim from the front
+
+  // Finals clear after roughly the time it takes to read them, so a short line
+  // doesn't linger as long as a full sentence. Clamped to a sane range.
+  function finalHideMs(text) {
+    var words = text.trim() ? text.trim().split(/\s+/).length : 0;
+    return Math.min(6000, Math.max(2200, 800 + words * 240));
+  }
 
   // ----- styles -------------------------------------------------------------
   var css = document.createElement('style');
@@ -63,6 +71,8 @@
   var enabled = true;        // captions visible by default
   var connected = false;
   var hideTimer = null;
+  var lastFinalText = '';    // last committed line (for repeat suppression)
+  var lastFinalAt = 0;       // when we last saw it
 
   function clamp(s) {
     if (s.length <= MAX_CHARS) return s;
@@ -71,12 +81,27 @@
 
   function show(text, interim) {
     if (!enabled) return;
-    textEl.textContent = clamp(text);
+    var line = clamp(text);
+
+    // The server resets its dedup state on every commit, so an identical final
+    // can be re-broadcast moments later (next utterance's first interim, or a
+    // re-committed line). Suppress it so the caption doesn't pop back up.
+    if (!interim) {
+      var now = Date.now();
+      if (line === lastFinalText && (now - lastFinalAt) < REPEAT_WINDOW_MS) {
+        lastFinalAt = now;       // keep the window rolling, but don't re-show
+        return;
+      }
+      lastFinalText = line;
+      lastFinalAt = now;
+    }
+
+    textEl.textContent = line;
     overlay.classList.toggle('interim', !!interim);
     overlay.classList.add('on');
     if (hideTimer) clearTimeout(hideTimer);
     hideTimer = setTimeout(function () { overlay.classList.remove('on'); },
-                           HIDE_AFTER_MS);
+                           interim ? INTERIM_HIDE_MS : finalHideMs(line));
   }
 
   function refreshBadge() {

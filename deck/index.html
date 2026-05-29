@@ -1505,6 +1505,93 @@ _handle_token_delete_request
     </div>
   </section>
 
+  <!-- ========================= NEW · open-tx-isp image-quality timeline ========================= -->
+  <section class="slide" data-label="Image Quality Timeline">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> mpv --profile=fast rtsp://thingino:thingino@cam:554/ch0</span>
+      <span class="meta">§ 02 &middot; first frame &rarr; crisp image</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">What the silicon actually streamed</div>
+      <h2 class="h-title">Image quality over time &mdash; green screen to crisp frame</h2>
+      <div class="h-sub">// every step is a real capture off the open driver &middot; click any frame to expand</div>
+
+      <div style="display:flex; gap:16px; margin-top:32px; flex:1; min-height:0; align-items:stretch;">
+        <div style="display:flex; flex-direction:column; flex:1 1 0; min-width:0;">
+          <div class="img-expand" data-src="photos/open-tx-isp/001.png"
+               data-caption="01 · Green screen — sensor streaming, zero valid pixels"
+               style="flex:1; min-height:0;">
+            <img src="photos/open-tx-isp/001.png" alt="solid green camera preview frame">
+            <div class="img-expand-hint" style="font-size:11px; padding:2px 6px; right:4px; bottom:4px;">&#10530;</div>
+          </div>
+          <div style="margin-top:8px;"><span class="mono-green" style="font-family:var(--font-mono); font-size:14px;">01</span> <span style="font-size:13px; color:var(--text-dim);">Green screen &middot; no valid pixels</span></div>
+        </div>
+        <div style="display:flex; flex-direction:column; flex:1 1 0; min-width:0;">
+          <div class="img-expand" data-src="photos/open-tx-isp/002.png"
+               data-caption="02 · Torn buffer — DMA garbage, framebuffer corruption"
+               style="flex:1; min-height:0;">
+            <img src="photos/open-tx-isp/002.png" alt="torn, corrupted RGB noise frame">
+            <div class="img-expand-hint" style="font-size:11px; padding:2px 6px; right:4px; bottom:4px;">&#10530;</div>
+          </div>
+          <div style="margin-top:8px;"><span class="mono-green" style="font-family:var(--font-mono); font-size:14px;">02</span> <span style="font-size:13px; color:var(--text-dim);">Torn buffer &middot; DMA garbage</span></div>
+        </div>
+        <div style="display:flex; flex-direction:column; flex:1 1 0; min-width:0;">
+          <div class="img-expand" data-src="photos/open-tx-isp/003.png"
+               data-caption="03 · Single channel — wrong color matrix, magenta cast"
+               style="flex:1; min-height:0;">
+            <img src="photos/open-tx-isp/003.png" alt="magenta single-channel scene">
+            <div class="img-expand-hint" style="font-size:11px; padding:2px 6px; right:4px; bottom:4px;">&#10530;</div>
+          </div>
+          <div style="margin-top:8px;"><span class="mono-green" style="font-family:var(--font-mono); font-size:14px;">03</span> <span style="font-size:13px; color:var(--text-dim);">Single channel &middot; bad matrix</span></div>
+        </div>
+        <div style="display:flex; flex-direction:column; flex:1 1 0; min-width:0;">
+          <div class="img-expand" data-src="photos/open-tx-isp/004.png"
+               data-caption="04 · Planes split — RGB misaligned, rainbow ghosting"
+               style="flex:1; min-height:0;">
+            <img src="photos/open-tx-isp/004.png" alt="RGB plane misalignment, rainbow ghosting">
+            <div class="img-expand-hint" style="font-size:11px; padding:2px 6px; right:4px; bottom:4px;">&#10530;</div>
+          </div>
+          <div style="margin-top:8px;"><span class="mono-green" style="font-family:var(--font-mono); font-size:14px;">04</span> <span style="font-size:13px; color:var(--text-dim);">Planes split &middot; ghosting</span></div>
+        </div>
+        <div style="display:flex; flex-direction:column; flex:1 1 0; min-width:0;">
+          <div class="img-expand" data-src="photos/open-tx-isp/005.png"
+               data-caption="05 · Geometry back — real scene, heavy color cast"
+               style="flex:1; min-height:0;">
+            <img src="photos/open-tx-isp/005.png" alt="recognizable room scene with color cast">
+            <div class="img-expand-hint" style="font-size:11px; padding:2px 6px; right:4px; bottom:4px;">&#10530;</div>
+          </div>
+          <div style="margin-top:8px;"><span class="mono-green" style="font-family:var(--font-mono); font-size:14px;">05</span> <span style="font-size:13px; color:var(--text-dim);">Geometry back &middot; heavy cast</span></div>
+        </div>
+        <div style="display:flex; flex-direction:column; flex:1 1 0; min-width:0;">
+          <div class="img-expand" data-src="photos/open-tx-isp/006.png"
+               data-caption="06 · Sharp frame — full detail, white balance still off"
+               style="flex:1; min-height:0;">
+            <img src="photos/open-tx-isp/006.png" alt="sharp room frame with pink cast">
+            <div class="img-expand-hint" style="font-size:11px; padding:2px 6px; right:4px; bottom:4px;">&#10530;</div>
+          </div>
+          <div style="margin-top:8px;"><span class="mono-green" style="font-family:var(--font-mono); font-size:14px;">06</span> <span style="font-size:13px; color:var(--text-dim);">Sharp frame &middot; WB off</span></div>
+        </div>
+        <div style="display:flex; flex-direction:column; flex:1 1 0; min-width:0;">
+          <div class="img-expand" data-src="photos/open-tx-isp/007.png"
+               data-caption="07 · Crisp image — correct color &amp; exposure (block mask 0xDD04)"
+               style="flex:1; min-height:0; border-color:rgba(0,227,140,0.45);">
+            <img src="photos/open-tx-isp/007.png" alt="crisp, correctly-colored camera frame">
+            <div class="img-expand-hint" style="font-size:11px; padding:2px 6px; right:4px; bottom:4px;">&#10530;</div>
+          </div>
+          <div style="margin-top:8px;"><span class="mono-green" style="font-family:var(--font-mono); font-size:14px;">07</span> <span style="font-size:13px; color:var(--green);">Crisp image &middot; first good frame</span></div>
+        </div>
+      </div>
+
+      <div class="push" style="margin-top:24px; padding:16px 22px; background:var(--panel); border:1px dashed var(--border-2); border-radius:10px; font-family:var(--font-mono); font-size:18px; color:var(--text-dim);">
+        <span style="color:var(--green)">&rarr;</span> Months of grinding between frames: each step is one class of bug fixed in the pipeline &mdash; DMA, color matrix, plane order, white balance. Anchor: the <span class="mono-green">&ldquo;crisp image&rdquo;</span> commit, block mask <code class="inline">0xDD04</code>.
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page">&middot;</span>
+    </div>
+  </section>
+
   <!-- ========================= NEW · open-tx-isp methodology ========================= -->
   <section class="slide" data-label="open-tx-isp method">
     <div class="chrome-top">
@@ -2443,6 +2530,7 @@ recommend porting the bounds check + re-running with block mask 0xDD04.</span></
         <ul style="list-style:none; padding:0; margin:0; font-size:24px; line-height:1.6; color:var(--text);">
           <li style="padding:6px 0;"><span class="mono-green" style="margin-right:12px;">&rarr;</span><strong>BSides Maine</strong> &mdash; for accepting this talk and putting on the event</li>
           <li style="padding:6px 0;"><span class="mono-green" style="margin-right:12px;">&rarr;</span><strong>My parents</strong> &mdash; for pushing me to do my best</li>
+          <li style="padding:6px 0;"><span class="mono-green" style="margin-right:12px;">&rarr;</span><strong>My brother</strong> &mdash; for always believing in me</li>
           <li style="padding:6px 0;"><span class="mono-green" style="margin-right:12px;">&rarr;</span><strong>My dog Goulash</strong> &mdash; for his patience with my extensive computer time</li>
           <li style="padding:6px 0;"><span class="mono-green" style="margin-right:12px;">&rarr;</span><strong>All of you</strong> &mdash; for attending</li>
         </ul>
@@ -3141,6 +3229,24 @@ recommend porting the bounds check + re-running with block mask 0xDD04.</span></
 
     let sourceVideo = null;          // inline <video> we expanded from
     let sourceWasPlaying = false;    // so we can resume it on close
+    let galleryItems = [];           // .img-expand triggers in the active slide
+    let galleryIndex = -1;           // position within galleryItems
+
+    // Expand a specific .img-expand trigger (shared by click + arrow nav).
+    function openTrigger(trigger) {
+      if (!trigger) return;
+      const inner = trigger.querySelector('img');
+      const innerVideo = trigger.querySelector('video');
+      openLb(trigger.dataset.src || (inner && inner.src), trigger.dataset.caption || '', trigger.dataset.video || '', trigger.dataset.playbackRate || '', innerVideo);
+    }
+
+    // Move within the current slide's gallery (dir = -1 / +1, wraps around).
+    function navigate(dir) {
+      if (galleryItems.length < 2) return;
+      const n = galleryItems.length;
+      galleryIndex = (galleryIndex + dir + n) % n;
+      openTrigger(galleryItems[galleryIndex]);
+    }
 
     function openLb(src, caption, videoSrc, playbackRate, srcVideo) {
       if (!src && !videoSrc) return;
@@ -3195,6 +3301,8 @@ recommend porting the bounds check + re-running with block mask 0xDD04.</span></
       sourceWasPlaying = false;
       lbVideo.pause();
       lbVideo.removeAttribute('src');
+      galleryItems = [];
+      galleryIndex = -1;
     }
 
     // Capture phase so this runs before deck-stage tap-zone handlers.
@@ -3203,9 +3311,11 @@ recommend porting the bounds check + re-running with block mask 0xDD04.</span></
       if (trigger) {
         e.preventDefault();
         e.stopPropagation();
-        const inner = trigger.querySelector('img');
-        const innerVideo = trigger.querySelector('video');
-        openLb(trigger.dataset.src || (inner && inner.src), trigger.dataset.caption || '', trigger.dataset.video || '', trigger.dataset.playbackRate || '', innerVideo);
+        // Build the gallery from sibling .img-expand items in the same slide.
+        const slide = trigger.closest('section') || document;
+        galleryItems = Array.prototype.slice.call(slide.querySelectorAll('.img-expand'));
+        galleryIndex = galleryItems.indexOf(trigger);
+        openTrigger(trigger);
         return;
       }
       if (overlay.hasAttribute('data-open')) {
@@ -3230,6 +3340,14 @@ recommend porting the bounds check + re-running with block mask 0xDD04.</span></
         e.preventDefault();
         e.stopPropagation();
         closeLb();
+      } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        e.stopPropagation();
+        navigate(1);
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        e.stopPropagation();
+        navigate(-1);
       } else {
         e.stopPropagation();
       }
