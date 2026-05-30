@@ -665,19 +665,19 @@ code.inline {
           <div>
             <div class="mono-green" style="font-size:13px; letter-spacing:0.22em; text-transform:uppercase; margin-bottom:6px;">Background</div>
             <div style="font-size:21px; line-height:1.45; color:var(--text-dim);">
-              Around <span class="mono-green">2006</span>, I read <em>Linux Device Drivers, 2nd edition</em> for a college course under the instruction of <span class="mono-green">Prof. Steve Lumetta</span>. We shipped real drivers back then, after which I took a long break.
+              Around <span class="mono-green">2006</span>, I read <em>Linux Device Drivers, 2nd edition</em> for a college course under the instruction of <span class="mono-green">Prof. Steven Lumetta</span>. We shipped real drivers back then, after which I took a long break.
             </div>
           </div>
         </div>
         <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
           <div class="img-expand"
                data-src="photos/steve_lumetta.jpeg"
-               data-caption="Prof. Steve Lumetta"
+               data-caption="Prof. Steven Lumetta"
                style="flex:0 0 148px; width:148px; height:148px; background:#000;">
-            <img src="photos/steve_lumetta.jpeg" alt="Prof. Steve Lumetta" style="object-fit:cover;">
+            <img src="photos/steve_lumetta.jpeg" alt="Prof. Steven Lumetta" style="object-fit:cover;">
             <div class="img-expand-hint" style="font-size:11px; padding:2px 6px; right:4px; bottom:4px;">⤢</div>
           </div>
-          <div class="mono-green" style="font-size:13px; letter-spacing:0.1em;">Prof. Steve Lumetta</div>
+          <div class="mono-green" style="font-size:13px; letter-spacing:0.1em;">Prof. Steven Lumetta</div>
         </div>
         <div>
           <div class="mono-amber" style="font-size:13px; letter-spacing:0.22em; text-transform:uppercase; margin-bottom:6px;">Why cameras, why now</div>
@@ -1277,8 +1277,8 @@ _handle_token_delete_request
           <p style="font-size:18px; margin:6px 0 0;">Translate those syscalls into <strong>register pokes</strong>, service interrupts, move buffers via DMA, and manage clocks &amp; power &mdash; all in kernel space.</p>
         </div>
         <div class="card accent-blue" style="padding:18px 22px;">
-          <div class="card-label">Full circle</div>
-          <p style="font-size:18px; margin:6px 0 0;">This is the <em>Linux Device Drivers</em> book from slide 2, twenty years later &mdash; except now the driver we need ships as a <span class="mono-coral">closed blob</span>.</p>
+          <div class="card-label">When drivers go closed</div>
+          <p style="font-size:18px; margin:6px 0 0;">Many embedded vendors ship critical drivers (like ISPs) as <span class="mono-coral">closed-source blobs</span>. No headers, no source &mdash; just a <code class="inline">.ko</code> you must reverse-engineer to understand.</p>
         </div>
       </div>
 
@@ -2151,66 +2151,7 @@ recommend porting the bounds check + re-running with block mask 0xDD04.</span></
     </div>
   </section>
 
-  <!-- ========================= SLIDE 27 — Boot ROM + AI RE ========================= -->
-  <section class="slide" data-label="Boot ROM Analysis + AI RE">
-    <div class="chrome-top">
-      <span><span class="prompt">$</span> ./dump_bootrom --soc t31 | mcp.stream(binja.decomp)</span>
-      <span class="meta">§ 04 · breakthrough</span>
-    </div>
-    <div class="body">
-      <div class="eyebrow">5 SoC families extracted + cross-compared</div>
-      <h2 class="h-title">Boot ROM analysis + AI-assisted RE</h2>
-      <div class="h-sub">// Smart Diff MCP pipeline surfaces vulnerability patterns</div>
-
-      <div class="row2" style="margin-top:24px; gap:28px; flex:1;">
-        <div style="display:flex; flex-direction:column; gap:18px;">
-          <div class="term" style="font-size:18px;">
-            <div class="term-head">
-              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-              <span class="title" style="font-size:16px;">bootrom extraction</span>
-            </div>
-            <div class="term-body"><span class="cmt"># libusb_set_configuration(1) required</span>
-<span class="prompt" style="font-size:16px;">$</span> <span class="cmd" style="font-size:16px;">./dump_bootrom --soc t31</span>
-<span class="out" style="font-size:15px;">[+] opened a108:c309 (Ingenic USB boot)</span>
-<span class="out" style="font-size:15px;">[+] set configuration to 1</span>
-<span class="out" style="font-size:15px;">[+] VR_SET_DATA_ADDR = 0xBFC00000</span>
-<span class="out" style="font-size:15px;">[+] bulk IN → t31_bootrom.bin (32KB)</span></div>
-          </div>
-
-          <div class="card accent-blue" style="flex:0 0 auto;">
-            <div class="card-label" style="font-size:14px;">Tooling</div>
-            <h3 class="card-title" style="font-size:20px;">Binary Ninja + headless API</h3>
-            <p style="font-size:16px; margin:0"><code class="inline">MIPS:LE:32:default</code> architecture. Custom Python script exports decompiled C for all functions.</p>
-          </div>
-        </div>
-
-        <div style="display:flex; flex-direction:column; gap:18px;">
-          <div style="text-align:center; padding:24px; background:var(--panel); border:1px solid var(--border); border-radius:12px;">
-            <div class="mono-green" style="font-size:14px; letter-spacing:0.2em; text-transform:uppercase; margin-bottom:8px">T40 &harr; T41 Similarity</div>
-            <div style="font-size:72px; font-family:var(--font-mono); font-weight:600; color:var(--green); line-height:1;">86.6<span style="font-size:36px; color:var(--green-dim)">%</span></div>
-          </div>
-
-          <div class="card accent-green" style="flex:0 0 auto;">
-            <div class="card-label" style="font-size:14px;">Key discovery</div>
-            <h3 class="card-title" style="font-size:20px;">Init-table before verify</h3>
-            <p style="font-size:16px; margin:0">Smart Diff MCP pipeline revealed T41/T32/T40/A1 parse init tables <em>before</em> calling the verifier.</p>
-          </div>
-
-          <div class="card accent-amber" style="flex:0 0 auto;">
-            <div class="card-label" style="font-size:14px;">T31 discovery</div>
-            <h3 class="card-title" style="font-size:20px;">FUN_bfc035b0 partial compare</h3>
-            <p style="font-size:16px; margin:0">Same pipeline flagged <code class="inline">local_138[0] == local_38[0]</code> — only 4 bytes checked.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="chrome-bot">
-      <span class="meta">bsides_maine_2026 // matt davis</span>
-      <span class="page"><span style="color:var(--green)">27</span><span class="sep">/</span>34</span>
-    </div>
-  </section>
-
-  <!-- ========================= SLIDE 28 — LLM assistance ========================= -->
+  <!-- ========================= SLIDE 27 — LLM assistance ========================= -->
   <section class="slide" data-label="LLM Assistance">
     <div class="chrome-top">
       <span><span class="prompt">$</span> qwen --local --help</span>
@@ -2252,6 +2193,65 @@ recommend porting the bounds check + re-running with block mask 0xDD04.</span></
           <div class="card" style="border-color:var(--green);">
             <div class="card-label" style="color:var(--green);">Key takeaway</div>
             <p style="font-size:18px; margin:0;">For security research, local models provide capability without censorship. Frontier models excel at everything except the work you're actually doing.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page"><span style="color:var(--green)">27</span><span class="sep">/</span>34</span>
+    </div>
+  </section>
+
+  <!-- ========================= SLIDE 28 — Boot ROM + AI RE ========================= -->
+  <section class="slide" data-label="Boot ROM Analysis + AI RE">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> ./dump_bootrom --soc t31 | mcp.stream(binja.decomp)</span>
+      <span class="meta">§ 04 · breakthrough</span>
+    </div>
+    <div class="body">
+      <div class="eyebrow">5 SoC families extracted + cross-compared</div>
+      <h2 class="h-title">Boot ROM analysis + AI-assisted RE</h2>
+      <div class="h-sub">// Can AI assisted Reverse Engineering tooling spot implementation flaws?</div>
+
+      <div class="row2" style="margin-top:24px; gap:28px; flex:1;">
+        <div style="display:flex; flex-direction:column; gap:18px;">
+          <div class="term" style="font-size:18px;">
+            <div class="term-head">
+              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+              <span class="title" style="font-size:16px;">bootrom extraction</span>
+            </div>
+            <div class="term-body"><span class="cmt"># libusb_set_configuration(1) required</span>
+<span class="prompt" style="font-size:16px;">$</span> <span class="cmd" style="font-size:16px;">./dump_bootrom --soc t31</span>
+<span class="out" style="font-size:15px;">[+] opened a108:c309 (Ingenic USB boot)</span>
+<span class="out" style="font-size:15px;">[+] set configuration to 1</span>
+<span class="out" style="font-size:15px;">[+] VR_SET_DATA_ADDR = 0xBFC00000</span>
+<span class="out" style="font-size:15px;">[+] bulk IN → t31_bootrom.bin (32KB)</span></div>
+          </div>
+
+          <div class="card accent-blue" style="flex:0 0 auto;">
+            <div class="card-label" style="font-size:14px;">Tooling</div>
+            <h3 class="card-title" style="font-size:20px;">Binary Ninja Personal Edition</h3>
+            <p style="font-size:16px; margin:0"><code class="inline">MIPS:LE:32:default</code> architecture. Custom Python script exports decompiled C for all functions.</p>
+          </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:18px;">
+          <div style="text-align:center; padding:24px; background:var(--panel); border:1px solid var(--border); border-radius:12px;">
+            <div class="mono-green" style="font-size:14px; letter-spacing:0.2em; text-transform:uppercase; margin-bottom:8px">T40 &harr; T41 Similarity</div>
+            <div style="font-size:72px; font-family:var(--font-mono); font-weight:600; color:var(--green); line-height:1;">86.6<span style="font-size:36px; color:var(--green-dim)">%</span></div>
+          </div>
+
+          <div class="card accent-coral" style="flex:0 0 auto;">
+            <div class="card-label" style="font-size:14px;">Vuln class 01</div>
+            <h3 class="card-title" style="font-size:20px;">T31: 4-byte hash compare</h3>
+            <p style="font-size:16px; margin:0"><code class="inline">FUN_bfc035b0</code> checks <code class="inline">local_138[0] == local_38[0]</code> — RSA-2048 reduced to 32-bit.</p>
+          </div>
+
+          <div class="card accent-amber" style="flex:0 0 auto;">
+            <div class="card-label" style="font-size:14px;">Vuln class 02</div>
+            <h3 class="card-title" style="font-size:20px;">T32/T40/T41/A1: init-before-verify</h3>
+            <p style="font-size:16px; margin:0">Smart Diff matched init parsers across 4 SoCs — all parse attacker tables <em>before</em> signature check.</p>
           </div>
         </div>
       </div>
@@ -2480,57 +2480,38 @@ recommend porting the bounds check + re-running with block mask 0xDD04.</span></
     </div>
   </section>
 
-  <!-- ========================= SLIDE 33 — Bigger picture ========================= -->
-  <section class="slide" data-label="The Bigger Picture">
+  <!-- ========================= SLIDE 33 — Disclosure Status ========================= -->
+  <section class="slide" data-label="Disclosure Status">
     <div class="chrome-top">
-      <span><span class="prompt">$</span> ./summary.sh</span>
+      <span><span class="prompt">$</span> ./disclosure-status.sh</span>
       <span class="meta">§ 07 · what it means</span>
     </div>
     <div class="body">
       <div class="eyebrow">Chapter 07 · The Bigger Picture</div>
       <h2 class="h-title">State of the disclosure</h2>
 
-      <div class="tbl" style="margin-top:40px;">
-        <div class="row head" style="grid-template-columns: 1fr 2fr 2fr;">
-          <div>SoC</div><div>Vuln Class</div><div>Hardware Confirmed</div>
+      <div style="margin-top:32px; display:flex; flex-direction:column; gap:20px;">
+        <div class="card accent-blue">
+          <div class="card-label">Notification sent to</div>
+          <h3 class="card-title" style="font-size:22px;">Ingenic Semiconductor (chip manufacturer)</h3>
+          <p style="font-size:17px; margin:0;">Detailed technical reports for 5 SoC families. Limited response. T-series models with affected boot ROMs have since been <span class="mono-amber">deprecated</span>.</p>
         </div>
-        <div class="row" style="grid-template-columns: 1fr 2fr 2fr;">
-          <div class="mono-green" style="font-weight:600">T31</div>
-          <div>32-bit partial verify</div>
-          <div class="ok" style="font-weight:600">✓ T31X video doorbell</div>
-        </div>
-        <div class="row alt" style="grid-template-columns: 1fr 2fr 2fr;">
-          <div class="mono-green" style="font-weight:600">T32</div>
-          <div>Init-table bypass</div>
-          <div class="ok" style="font-weight:600">✓ T32 pan/tilt camera</div>
-        </div>
-        <div class="row" style="grid-template-columns: 1fr 2fr 2fr;">
-          <div class="mono-green" style="font-weight:600">T40</div>
-          <div>Init-table bypass</div>
-          <div class="dim">· not yet (ROM evidence)</div>
-        </div>
-        <div class="row alt" style="grid-template-columns: 1fr 2fr 2fr;">
-          <div class="mono-green" style="font-weight:600">T41</div>
-          <div>Init-table bypass</div>
-          <div class="ok" style="font-weight:600">✓ T41NQ IP camera</div>
-        </div>
-        <div class="row" style="grid-template-columns: 1fr 2fr 2fr;">
-          <div class="mono-green" style="font-weight:600">A1</div>
-          <div>Init-table bypass</div>
-          <div class="dim">· not yet (ROM evidence)</div>
-        </div>
-      </div>
 
-      <div style="margin-top:36px; padding:28px 36px; background:var(--panel-2); border:1px solid var(--border); border-radius:12px;">
-        <div class="mono-amber" style="font-size:16px; letter-spacing:0.22em; text-transform:uppercase; margin-bottom:10px">Learnings</div>
-        <div style="font-size:26px; color:var(--text); line-height:1.4;">
-          Coordinating disclosure with a foreign semiconductor vendor has been
-          <span class="mono-amber">difficult</span> &mdash; getting an official response on a clear timeline is the hardest part, not the bug itself.
+        <div class="card accent-green">
+          <div class="card-label">Downstream notifications</div>
+          <h3 class="card-title" style="font-size:22px;">ODMs and device vendors</h3>
+          <p style="font-size:17px; margin:0;">Contacted manufacturers of affected devices (video doorbells, IP cameras, NVRs). Varied response times. Some working on firmware patches.</p>
+        </div>
+
+        <div class="card accent-amber">
+          <div class="card-label">CVE requests</div>
+          <h3 class="card-title" style="font-size:22px;">Assigned but silent</h3>
+          <p style="font-size:17px; margin:0;">CVEs requested and assigned. No public advisory from coordinating bodies. Likely deprioritized amid other critical vulnerabilities.</p>
         </div>
       </div>
 
       <div class="push" style="margin-top:28px; display:flex; justify-content:space-between; align-items:center; font-family:var(--font-mono); font-size:22px;">
-        <span class="pill green"><span class="dot"></span>coordinated disclosure in progress with Ingenic and downstream vendors</span>
+        <span class="pill green"><span class="dot"></span>coordinated disclosure: attempted</span>
         <span class="mono-green">opensensor.io/security</span>
       </div>
     </div>
@@ -2540,7 +2521,31 @@ recommend porting the bounds check + re-running with block mask 0xDD04.</span></
     </div>
   </section>
 
-  <!-- ========================= SLIDE 34 — Q&A / Thanks ========================= -->
+  <!-- ========================= SLIDE 34 — Demo (Time Permitting) ========================= -->
+  <section class="slide" data-label="Demo (Time Permitting)">
+    <div class="chrome-top">
+      <span><span class="prompt">$</span> ./exploit_demo.sh</span>
+      <span class="meta">§ 08 · demo</span>
+    </div>
+    <div class="body" style="justify-content:center; align-items:center; text-align:center;">
+      <div class="eyebrow" style="text-align:center;">Time permitting</div>
+      <h2 class="h-title" style="font-size:100px; line-height:1; margin:24px 0 8px;">Live Demo</h2>
+      <div class="h-sub" style="text-align:center;">// firmware forgery on affected devices</div>
+
+      <div style="margin-top:64px; padding:40px 60px; background:var(--panel-2); border:1px solid var(--border); border-radius:12px;">
+        <div class="mono-amber" style="font-size:18px; letter-spacing:0.22em; text-transform:uppercase; margin-bottom:16px;">placeholder</div>
+        <div style="font-size:28px; color:var(--text-dim);">
+          Boot ROM extraction → SPL forgery → device flash
+        </div>
+      </div>
+    </div>
+    <div class="chrome-bot">
+      <span class="meta">bsides_maine_2026 // matt davis</span>
+      <span class="page"><span style="color:var(--green)">34</span><span class="sep">/</span>35</span>
+    </div>
+  </section>
+
+  <!-- ========================= SLIDE 35 — Q&A / Thanks ========================= -->
   <section class="slide" data-label="Q&amp;A · Thanks">
     <div class="chrome-top">
       <span><span class="prompt">$</span> talk --end</span>
@@ -2569,7 +2574,7 @@ recommend porting the bounds check + re-running with block mask 0xDD04.</span></
     </div>
     <div class="chrome-bot">
       <span class="meta">bsides_maine_2026 // matt davis &middot; thank you</span>
-      <span class="page"><span style="color:var(--green)">34</span><span class="sep">/</span>34</span>
+      <span class="page"><span style="color:var(--green)">35</span><span class="sep">/</span>35</span>
     </div>
   </section>
 
